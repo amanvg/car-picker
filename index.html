@@ -232,82 +232,51 @@
     }
 
     /* ─────────────────────────────────────────
-       ABOUT
+       HERO / BIO
     ───────────────────────────────────────── */
-    .about {
-      border-top: 1px solid var(--border);
-      padding: 48px 32px 56px;
-    }
-
-    .about-inner {
+    .hero {
       max-width: 960px;
+      width: 100%;
       margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 32px;
+      padding: 56px 32px 0;
     }
 
-    .about-text h2 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
       color: var(--text-primary);
     }
 
-    .about-text p {
-      font-size: 15px;
+    .hero p {
+      font-size: 16px;
       color: var(--text-secondary);
       margin-top: 10px;
       line-height: 1.7;
-      max-width: 520px;
     }
-
-    .btn-email {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 11px 20px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      text-decoration: none;
-      color: var(--text-primary);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      transition: background 0.15s, border-color 0.15s, transform 0.15s;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .btn-email:hover {
-      background: var(--surface-hover);
-      border-color: var(--border-hover);
-      transform: translateY(-1px);
-    }
-
-    .btn-email:active { transform: scale(0.97); }
 
     /* ─────────────────────────────────────────
-       FOOTER
+       SECTION HEADER
     ───────────────────────────────────────── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 20px 32px;
-    }
-
-    .footer-inner {
+    .section-header {
       max-width: 960px;
+      width: 100%;
       margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 48px 32px 0;
     }
 
-    footer p {
-      font-size: 12px;
+    .section-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       color: var(--text-tertiary);
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin-top: 12px;
     }
 
     /* ─────────────────────────────────────────
@@ -317,10 +286,8 @@
       .projects { padding-left: 20px; padding-right: 20px; }
       .nav-inner { padding: 0 20px; }
       .nav-links { display: none; }
-      .about { padding: 40px 20px 48px; }
-      .about-inner { flex-direction: column; align-items: flex-start; gap: 24px; }
-      footer { padding: 20px; }
-      .footer-inner { flex-direction: column; gap: 6px; text-align: center; }
+      .hero { padding: 40px 20px 0; }
+      .section-header { padding: 40px 20px 0; }
     }
   </style>
 </head>
@@ -332,10 +299,21 @@
       <a class="nav-logo" href="/">aman<span>vg</span></a>
       <ul class="nav-links">
         <li><a href="#projects">Projects</a></li>
-        <li><a href="#about">About</a></li>
       </ul>
     </div>
   </nav>
+
+  <!-- BIO -->
+  <div class="hero" id="about">
+    <h1>Aman Gandhi</h1>
+    <p>IT Analyst from Washington State, USA.</p>
+  </div>
+
+  <!-- SECTION HEADER -->
+  <div class="section-header">
+    <h2>Things I've made</h2>
+    <hr class="section-divider">
+  </div>
 
   <!-- PROJECT GRID -->
   <main class="projects" id="projects">
@@ -360,29 +338,6 @@
 
     </div>
   </main>
-
-  <!-- ABOUT -->
-  <section class="about" id="about">
-    <div class="about-inner">
-      <div class="about-text">
-        <h2>Aman Gandhi</h2>
-        <p>
-          Aman Gandhi is an IT analyst from Washington, USA.
-        </p>
-      </div>
-      <a class="btn-email" href="mailto:amanvg@gmail.com">
-        ✉ Get in touch
-      </a>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-inner">
-      <p>© 2025 Aman Gandhi</p>
-      <p>amanvg.com</p>
-    </div>
-  </footer>
 
 </body>
 </html>
