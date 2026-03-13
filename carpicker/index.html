@@ -95,32 +95,158 @@
     header {
       width: 100%;
       max-width: 480px;
-      padding: 24px 24px 16px;
+      padding: 16px 24px 10px;
       text-align: center;
     }
 
     .logo {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
       color: var(--text-primary);
       letter-spacing: -0.02em;
     }
 
     .tagline {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-secondary);
-      margin-top: 4px;
+      margin-top: 3px;
       font-weight: 400;
     }
 
     /* ── MAIN WRAPPER ── */
     #app {
       width: 100%;
-      max-width: 440px;
-      padding: 0 16px 40px;
+      max-width: 480px;
+      padding: 0 16px 32px;
       display: flex;
       flex-direction: column;
       gap: 0;
+    }
+
+    /* ── CATEGORY PICKER SCREEN ── */
+    #category-screen {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #category-screen.hidden { display: none; }
+
+    .category-prompt {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      text-align: center;
+      margin-bottom: 0;
+    }
+
+    .category-subprompt {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .category-card {
+      background: var(--card);
+      border: 1.5px solid #262626;
+      border-radius: 14px;
+      padding: 14px 12px;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .category-card:hover {
+      border-color: #3a3a3a;
+      background: #1c1c1c;
+      transform: translateY(-1px);
+    }
+
+    .category-card:active { transform: scale(0.98); }
+
+    .category-card-icon {
+      font-size: 22px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .category-card-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .category-card-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+
+    .category-card-count {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+      font-weight: 500;
+    }
+
+    .category-card.not-sure {
+      border-color: #222;
+      background: #111;
+    }
+
+    .category-card.not-sure:hover {
+      border-color: #333;
+      background: #181818;
+    }
+
+    /* ── CARD PHASE HEADER ── */
+    .card-phase-header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+
+    .change-category-btn {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .change-category-btn:hover {
+      color: var(--text-secondary);
+      background: #1e1e1e;
+    }
+
+    @keyframes categoryFadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #category-screen.appearing .category-prompt,
+    #category-screen.appearing .category-subprompt,
+    #category-screen.appearing .category-grid {
+      animation: categoryFadeIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
     /* ── CARD STAGE ── */
@@ -519,7 +645,7 @@
       padding: 13px 32px;
       border-radius: var(--radius-btn);
       background: var(--text-primary);
-      color: #fff;
+      color: #0d0d0d;
       border: none;
       font-size: 15px;
       font-weight: 600;
@@ -575,9 +701,19 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 480px) {
+      #app { padding: 0 12px 24px; }
+      header { padding: 12px 16px 8px; }
+      .logo { font-size: 18px; }
+      .tagline { font-size: 12px; }
       .car-name { font-size: 24px; }
       .card-actions { flex-direction: column; gap: 8px; }
       #accept-btn, #reject-btn { flex: unset; width: 100%; }
+      .category-grid { gap: 6px; }
+      .category-card { padding: 10px 9px; }
+      .category-card-icon { font-size: 18px; }
+      .category-card-name { font-size: 12px; }
+      .category-card-desc { font-size: 10px; }
+      .category-card-count { display: none; }
     }
   </style>
 </head>
@@ -597,6 +733,19 @@
 
   <div id="app">
 
+    <!-- SCREEN 1: Category picker -->
+    <div id="category-screen">
+      <p class="category-prompt">Do you have a type in mind?</p>
+      <p class="category-subprompt">Pick a category or let us suggest something.</p>
+      <div class="category-grid" id="category-grid">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Car cards + rejection -->
+    <div id="card-phase-header" class="card-phase-header" style="display:none">
+      <button class="change-category-btn" id="change-category-btn">← Change category</button>
+    </div>
     <div id="card-stage">
       <!-- Car card injected here by JS -->
     </div>
@@ -617,8 +766,8 @@
 
     <div id="empty-screen" class="hidden">
       <div class="empty-icon">😤</div>
-      <h2 class="empty-title">You're impossible to please...</h2>
-      <p class="empty-message">You've rejected every car in existence. Honestly? Respect. Maybe it's time to lower the bar — just a little.</p>
+      <h2 class="empty-title">You've rejected everything...</h2>
+      <p class="empty-message">You've turned down every Nissan in this category. Respect the standards. Want to try a different category?</p>
       <button id="empty-restart-btn">Start Over</button>
     </div>
 
@@ -626,550 +775,221 @@
 
   <script>
     // ═══════════════════════════════════════════════════════════
-    // DATA
+    // DATA — NISSAN DATABASE
     // ═══════════════════════════════════════════════════════════
 
     const CAR_DATABASE = [
       {
-        id: 'versa', name: 'Nissan Versa', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$18,330 – $22,000',
-        priceScore: 1, speedScore: 1, sizeScore: 3, styleScore: 1, rarityScore: 1, funScore: 1, practicalityScore: 3,
+        id: 'versa',
+        name: 'Nissan Versa',
+        year: '2025',
+        bodyType: 'Subcompact Sedan',
+        category: 'sedan',
+        priceDisplay: '$17,190 – $22,000',
+        priceScore: 1, speedScore: 1, sizeScore: 2, styleScore: 2, rarityScore: 1, funScore: 2, practicalityScore: 4,
         colorAccent: '#6b7280',
         emoji: '🚗',
-        description: "The most basic car money can buy. Gets you there. That's about it.",
-        note: null
+        description: "The most affordable car in America. Gets you there reliably without drama — or excitement.",
+        note: "One of the lowest MSRPs in the US · up to 40 mpg highway"
       },
       {
-        id: 'spark', name: 'Chevrolet Spark', year: '2025', bodyType: 'Hatchback',
-        priceDisplay: '$19,300 – $22,000',
-        priceScore: 1, speedScore: 1, sizeScore: 2, styleScore: 2, rarityScore: 2, funScore: 2, practicalityScore: 2,
-        colorAccent: '#9ca3af',
-        emoji: '🚗',
-        description: "Tiny. Cheap. Parks anywhere. Practically invisible on the highway.",
-        note: null
-      },
-      {
-        id: 'venue', name: 'Hyundai Venue', year: '2025', bodyType: 'Subcompact SUV',
-        priceDisplay: '$21,550 – $26,000',
-        priceScore: 2, speedScore: 1, sizeScore: 3, styleScore: 3, rarityScore: 2, funScore: 2, practicalityScore: 4,
-        colorAccent: '#60a5fa',
-        emoji: '🚙',
-        description: "A miniature SUV for city life. What it lacks in power, it makes up for in cuteness.",
-        note: null
-      },
-      {
-        id: 'trax', name: 'Chevrolet Trax', year: '2025', bodyType: 'Subcompact SUV',
-        priceDisplay: '$21,795 – $26,500',
-        priceScore: 2, speedScore: 1, sizeScore: 4, styleScore: 3, rarityScore: 2, funScore: 2, practicalityScore: 5,
-        colorAccent: '#f97316',
-        emoji: '🚙',
-        description: "Budget SUV with a bold face. More style than its price tag suggests.",
-        note: null
-      },
-      {
-        id: 'soul', name: 'Kia Soul', year: '2025', bodyType: 'Hatchback',
-        priceDisplay: '$21,885 – $28,000',
-        priceScore: 2, speedScore: 1, sizeScore: 3, styleScore: 5, rarityScore: 3, funScore: 4, practicalityScore: 5,
-        colorAccent: '#f59e0b',
-        emoji: '🚗',
-        description: "Boxy but beautiful. A true original that refuses to blend in.",
-        note: null
-      },
-      {
-        id: 'sentra', name: 'Nissan Sentra', year: '2025', bodyType: 'Sedan',
+        id: 'sentra',
+        name: 'Nissan Sentra',
+        year: '2025',
+        bodyType: 'Compact Sedan',
+        category: 'sedan',
         priceDisplay: '$22,730 – $26,000',
-        priceScore: 2, speedScore: 2, sizeScore: 3, styleScore: 2, rarityScore: 1, funScore: 2, practicalityScore: 3,
-        colorAccent: '#64748b',
-        emoji: '🚗',
-        description: "The reliable sedan you rent at the airport. Competent and completely forgettable.",
-        note: null
-      },
-      {
-        id: 'forte', name: 'Kia Forte', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$23,850 – $27,000',
-        priceScore: 2, speedScore: 2, sizeScore: 3, styleScore: 3, rarityScore: 2, funScore: 3, practicalityScore: 3,
-        colorAccent: '#3b82f6',
-        emoji: '🚗',
-        description: "Good value, good warranty, good enough. Kia's bread-and-butter done right.",
-        note: null
-      },
-      {
-        id: 'elantra', name: 'Hyundai Elantra', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$23,450 – $27,500',
-        priceScore: 2, speedScore: 2, sizeScore: 3, styleScore: 4, rarityScore: 2, funScore: 3, practicalityScore: 3,
-        colorAccent: '#0ea5e9',
-        emoji: '🚗',
-        description: "Looks sharper than its price tag. The Elantra quietly outpunches its class.",
-        note: null
-      },
-      {
-        id: 'corolla', name: 'Toyota Corolla', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$24,200 – $28,500',
-        priceScore: 3, speedScore: 2, sizeScore: 3, styleScore: 2, rarityScore: 2, funScore: 2, practicalityScore: 4,
-        colorAccent: '#dc2626',
-        emoji: '🚗',
-        description: "The gold standard of sensible — dependable, efficient, invisible.",
-        note: null
-      },
-      {
-        id: 'civic', name: 'Honda Civic', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$24,950 – $30,000',
-        priceScore: 3, speedScore: 3, sizeScore: 3, styleScore: 4, rarityScore: 2, funScore: 4, practicalityScore: 4,
-        colorAccent: '#2563eb',
-        emoji: '🚗',
-        description: "America's favorite compact for a reason. Reliable, refined, and everywhere.",
-        note: null
-      },
-      {
-        id: 'jetta', name: 'Volkswagen Jetta', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$24,895 – $30,000',
-        priceScore: 3, speedScore: 3, sizeScore: 3, styleScore: 4, rarityScore: 3, funScore: 4, practicalityScore: 4,
-        colorAccent: '#1d4ed8',
-        emoji: '🚗',
-        description: "German engineering for the masses. Slightly upscale, surprisingly fun.",
-        note: null
-      },
-      {
-        id: 'impreza', name: 'Subaru Impreza', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$25,995 – $30,000',
-        priceScore: 3, speedScore: 3, sizeScore: 3, styleScore: 3, rarityScore: 3, funScore: 4, practicalityScore: 4,
-        colorAccent: '#16a34a',
-        emoji: '🚗',
-        description: "AWD as standard. For people who live somewhere it actually snows.",
-        note: null
-      },
-      {
-        id: 'mazda3', name: 'Mazda Mazda3', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$26,450 – $34,000',
-        priceScore: 3, speedScore: 3, sizeScore: 3, styleScore: 6, rarityScore: 4, funScore: 6, practicalityScore: 3,
-        colorAccent: '#b91c1c',
-        emoji: '🚗',
-        description: "The fun-to-drive pick in a boring class. Mazda3 makes economy feel premium.",
-        note: null
-      },
-      {
-        id: 'leaf', name: 'Nissan Leaf', year: '2024', bodyType: 'EV Hatchback',
-        priceDisplay: '$28,140 – $36,000',
-        priceScore: 3, speedScore: 3, sizeScore: 3, styleScore: 4, rarityScore: 3, funScore: 4, practicalityScore: 4,
-        colorAccent: '#22c55e',
-        emoji: '🚗',
-        description: "The original mass-market EV. Quietly changed the world, now quietly commutes.",
-        note: null
-      },
-      {
-        id: 'prius', name: 'Toyota Prius', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$28,650 – $35,000',
-        priceScore: 3, speedScore: 1, sizeScore: 3, styleScore: 3, rarityScore: 2, funScore: 2, practicalityScore: 4,
-        colorAccent: '#4ade80',
-        emoji: '🚗',
-        description: "57 mpg combined. You'll save on gas while being gently teased about it.",
-        note: null
-      },
-      {
-        id: 'miata', name: 'Mazda MX-5 Miata', year: '2024', bodyType: 'Roadster',
-        priceDisplay: '$30,170 – $38,000',
-        priceScore: 3, speedScore: 6, sizeScore: 1, styleScore: 8, rarityScore: 6, funScore: 9, practicalityScore: 1,
-        colorAccent: '#dc2626',
-        emoji: '🏎️',
-        description: "Pure driving joy in a tiny package. No trunk, no back seat, no apologies.",
-        note: "2 seats — trunk fits 1 carry-on"
-      },
-      {
-        id: 'mustang', name: 'Ford Mustang GT', year: '2025', bodyType: 'Coupe',
-        priceDisplay: '$28,995 – $42,000',
-        priceScore: 3, speedScore: 8, sizeScore: 3, styleScore: 9, rarityScore: 4, funScore: 10, practicalityScore: 2,
-        colorAccent: '#dc2626',
-        emoji: '🏎️',
-        description: "America's pony car. Still the loudest, most theatrical way to get groceries.",
-        note: "0–60 in ~4.3s"
-      },
-      {
-        id: 'accord', name: 'Honda Accord', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$28,700 – $38,000',
-        priceScore: 3, speedScore: 4, sizeScore: 5, styleScore: 4, rarityScore: 2, funScore: 4, practicalityScore: 5,
+        priceScore: 2, speedScore: 2, sizeScore: 3, styleScore: 3, rarityScore: 1, funScore: 2, practicalityScore: 4,
         colorAccent: '#475569',
         emoji: '🚗',
-        description: "The midsize sedan that has been quietly excellent for 40+ years.",
-        note: null
+        description: "A competent, well-rounded compact. You'll always find parking — because no one's fighting you for it.",
+        note: "149 hp · CVT standard"
       },
       {
-        id: 'camry', name: 'Toyota Camry', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$29,400 – $37,000',
-        priceScore: 3, speedScore: 3, sizeScore: 5, styleScore: 3, rarityScore: 2, funScore: 3, practicalityScore: 5,
-        colorAccent: '#374151',
-        emoji: '🚗',
-        description: "If reliability were a car, it would be this. Impossibly durable, slightly dull.",
-        note: null
-      },
-      {
-        id: 'sonata', name: 'Hyundai Sonata', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$29,850 – $36,000',
-        priceScore: 3, speedScore: 3, sizeScore: 4, styleScore: 5, rarityScore: 3, funScore: 4, practicalityScore: 4,
-        colorAccent: '#2563eb',
-        emoji: '🚗',
-        description: "More stylish than it gets credit for. The Sonata keeps raising the bar.",
-        note: null
-      },
-      {
-        id: 'altima', name: 'Nissan Altima', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$30,100 – $36,000',
-        priceScore: 3, speedScore: 3, sizeScore: 4, styleScore: 3, rarityScore: 2, funScore: 3, practicalityScore: 4,
-        colorAccent: '#0f172a',
-        emoji: '🚗',
-        description: "Roomy, comfortable, and utterly inoffensive. The quintessential midsize.",
-        note: null
-      },
-      {
-        id: 'gr86', name: 'Toyota GR86', year: '2025', bodyType: 'Sports Coupe',
-        priceDisplay: '$30,000 – $34,000',
-        priceScore: 3, speedScore: 7, sizeScore: 2, styleScore: 8, rarityScore: 6, funScore: 9, practicalityScore: 1,
-        colorAccent: '#c2410c',
-        emoji: '🏎️',
-        description: "The purest sports car under $35k. Lightweight, rear-wheel-drive, grin-inducing.",
-        note: "0–60 in ~6.1s"
-      },
-      {
-        id: 'wrx', name: 'Subaru WRX', year: '2025', bodyType: 'Sedan',
-        priceDisplay: '$32,000 – $40,000',
-        priceScore: 4, speedScore: 8, sizeScore: 4, styleScore: 7, rarityScore: 5, funScore: 9, practicalityScore: 3,
-        colorAccent: '#1d4ed8',
-        emoji: '🏎️',
-        description: "Rally car for everyday use. Turbo AWD in a sensible sedan shape.",
-        note: "0–60 in ~5.1s"
-      },
-      {
-        id: 'blazer', name: 'Chevrolet Blazer', year: '2025', bodyType: 'Compact SUV',
-        priceDisplay: '$33,500 – $47,000',
-        priceScore: 4, speedScore: 4, sizeScore: 5, styleScore: 6, rarityScore: 3, funScore: 5, practicalityScore: 5,
-        colorAccent: '#c2410c',
-        emoji: '🚙',
-        description: "Sporty lines and bold styling that actually mean something on this SUV.",
-        note: null
-      },
-      {
-        id: 'escape', name: 'Ford Escape', year: '2025', bodyType: 'Compact SUV',
-        priceDisplay: '$34,795 – $42,000',
-        priceScore: 4, speedScore: 3, sizeScore: 5, styleScore: 3, rarityScore: 2, funScore: 3, practicalityScore: 6,
-        colorAccent: '#6d28d9',
-        emoji: '🚙',
-        description: "The go-to family compact SUV. Practical, popular, and perfectly adequate.",
-        note: null
-      },
-      {
-        id: 'crv', name: 'Honda CR-V', year: '2025', bodyType: 'Compact SUV',
-        priceDisplay: '$35,250 – $43,000',
-        priceScore: 4, speedScore: 3, sizeScore: 6, styleScore: 3, rarityScore: 2, funScore: 3, practicalityScore: 7,
-        colorAccent: '#1e40af',
-        emoji: '🚙',
-        description: "The benchmark compact SUV. Best-in-class cargo space, always in someone's driveway.",
-        note: "68 cu ft cargo"
-      },
-      {
-        id: 'rav4', name: 'Toyota RAV4', year: '2025', bodyType: 'Compact SUV',
-        priceDisplay: '$36,100 – $43,000',
-        priceScore: 4, speedScore: 3, sizeScore: 6, styleScore: 3, rarityScore: 2, funScore: 3, practicalityScore: 7,
-        colorAccent: '#92400e',
-        emoji: '🚙',
-        description: "The best-selling SUV in the US for good reason. Bulletproof reliability.",
-        note: "37.6 mpg hybrid"
-      },
-      {
-        id: 'cx5', name: 'Mazda CX-5', year: '2025', bodyType: 'Compact SUV',
-        priceDisplay: '$36,500 – $44,000',
-        priceScore: 4, speedScore: 4, sizeScore: 5, styleScore: 7, rarityScore: 4, funScore: 6, practicalityScore: 5,
-        colorAccent: '#7c3aed',
-        emoji: '🚙',
-        description: "The beautiful overachiever of compact SUVs. Premium feel without the premium price.",
-        note: null
-      },
-      {
-        id: 'equinox_ev', name: 'Chevrolet Equinox EV', year: '2025', bodyType: 'Electric SUV',
-        priceDisplay: '$35,000 – $45,000',
-        priceScore: 4, speedScore: 3, sizeScore: 6, styleScore: 5, rarityScore: 3, funScore: 5, practicalityScore: 6,
-        colorAccent: '#0369a1',
-        emoji: '🚙',
-        description: "Affordable electric SUV with 300+ miles of range. The EV for everyone.",
-        note: "300+ mile range"
-      },
-      {
-        id: 'sorento', name: 'Kia Sorento', year: '2025', bodyType: 'Midsize SUV',
-        priceDisplay: '$38,450 – $50,000',
-        priceScore: 4, speedScore: 3, sizeScore: 7, styleScore: 5, rarityScore: 3, funScore: 4, practicalityScore: 7,
-        colorAccent: '#065f46',
-        emoji: '🚙',
-        description: "Three-row family transport done with surprising style and value.",
-        note: "Seats 7"
-      },
-      {
-        id: 'santa_fe', name: 'Hyundai Santa Fe', year: '2025', bodyType: 'Midsize SUV',
-        priceDisplay: '$39,250 – $48,000',
-        priceScore: 4, speedScore: 3, sizeScore: 7, styleScore: 5, rarityScore: 3, funScore: 4, practicalityScore: 7,
-        colorAccent: '#7e22ce',
-        emoji: '🚙',
-        description: "Bold styling meets family practicality. The Santa Fe just got bolder.",
-        note: "Seats 7"
-      },
-      {
-        id: 'odyssey', name: 'Honda Odyssey', year: '2025', bodyType: 'Minivan',
-        priceDisplay: '$38,700 – $53,000',
-        priceScore: 4, speedScore: 2, sizeScore: 9, styleScore: 1, rarityScore: 1, funScore: 1, practicalityScore: 10,
-        colorAccent: '#6b7280',
-        emoji: '🚐',
-        description: "The ultimate family hauler. Zero street cred. Infinite dad cred.",
-        note: "Seats 8 · 158 cu ft cargo"
-      },
-      {
-        id: 'sienna', name: 'Toyota Sienna', year: '2025', bodyType: 'Minivan',
-        priceDisplay: '$39,850 – $55,000',
-        priceScore: 4, speedScore: 2, sizeScore: 9, styleScore: 2, rarityScore: 1, funScore: 2, practicalityScore: 10,
-        colorAccent: '#4b5563',
-        emoji: '🚐',
-        description: "The only hybrid minivan. 36 mpg while hauling your whole soccer team.",
-        note: "Seats 8 · 36 mpg hybrid"
-      },
-      {
-        id: 'pacifica', name: 'Chrysler Pacifica', year: '2025', bodyType: 'Minivan',
-        priceDisplay: '$42,500 – $57,000',
-        priceScore: 5, speedScore: 2, sizeScore: 9, styleScore: 3, rarityScore: 2, funScore: 2, practicalityScore: 9,
-        colorAccent: '#7c3aed',
-        emoji: '🚐',
-        description: "The most stylish minivan ever made. Still a minivan, but you knew that.",
-        note: "Seats 7–8 · Available PHEV"
-      },
-      {
-        id: 'f150', name: 'Ford F-150', year: '2025', bodyType: 'Pickup Truck',
-        priceDisplay: '$39,885 – $70,000',
-        priceScore: 4, speedScore: 5, sizeScore: 9, styleScore: 5, rarityScore: 2, funScore: 5, practicalityScore: 9,
+        id: 'altima',
+        name: 'Nissan Altima',
+        year: '2025',
+        bodyType: 'Midsize Sedan',
+        category: 'sedan',
+        priceDisplay: '$27,000 – $36,000',
+        priceScore: 3, speedScore: 3, sizeScore: 4, styleScore: 3, rarityScore: 2, funScore: 3, practicalityScore: 5,
         colorAccent: '#1e3a5f',
-        emoji: '🛻',
-        description: "America's best-selling vehicle for 47 years running. There's a reason.",
-        note: "Tows up to 14,000 lbs"
-      },
-      {
-        id: 'silverado', name: 'Chevrolet Silverado 1500', year: '2025', bodyType: 'Pickup Truck',
-        priceDisplay: '$39,400 – $65,000',
-        priceScore: 4, speedScore: 5, sizeScore: 9, styleScore: 4, rarityScore: 2, funScore: 5, practicalityScore: 9,
-        colorAccent: '#b91c1c',
-        emoji: '🛻',
-        description: "The working man's workhorse. Does everything you need, nothing it doesn't.",
-        note: "Tows up to 13,300 lbs"
-      },
-      {
-        id: 'tundra', name: 'Toyota Tundra', year: '2025', bodyType: 'Pickup Truck',
-        priceDisplay: '$43,000 – $67,000',
-        priceScore: 5, speedScore: 6, sizeScore: 9, styleScore: 5, rarityScore: 3, funScore: 6, practicalityScore: 9,
-        colorAccent: '#7c2d12',
-        emoji: '🛻',
-        description: "Toyota's tough truck finally gets a twin-turbo hybrid. Big, reliable, capable.",
-        note: "Tows up to 12,000 lbs"
-      },
-      {
-        id: 'trx', name: 'RAM 1500 TRX', year: '2024', bodyType: 'Performance Truck',
-        priceDisplay: '$51,185 – $72,000',
-        priceScore: 6, speedScore: 8, sizeScore: 9, styleScore: 7, rarityScore: 5, funScore: 9, practicalityScore: 8,
-        colorAccent: '#dc2626',
-        emoji: '🛻',
-        description: "702 horsepower pickup truck. Entirely unnecessary. Absolutely magnificent.",
-        note: "702hp · 0–60 in 4.5s · Tows 8,100 lbs"
-      },
-      {
-        id: 'model3', name: 'Tesla Model 3', year: '2025', bodyType: 'Electric Sedan',
-        priceDisplay: '$39,990 – $54,000',
-        priceScore: 5, speedScore: 7, sizeScore: 4, styleScore: 8, rarityScore: 4, funScore: 8, practicalityScore: 4,
-        colorAccent: '#374151',
         emoji: '🚗',
-        description: "The EV that made EVs mainstream. Screaming fast, minimal interior, divisive.",
-        note: "0–60 in 3.1s (Performance) · 358 mi range"
+        description: "Roomy, comfortable, and completely inoffensive. The quintessential midsize sedan done well.",
+        note: "Available AWD · 182 or 236 hp"
       },
       {
-        id: 'model_y', name: 'Tesla Model Y', year: '2025', bodyType: 'Electric SUV',
-        priceDisplay: '$45,990 – $58,000',
-        priceScore: 5, speedScore: 7, sizeScore: 6, styleScore: 7, rarityScore: 3, funScore: 7, practicalityScore: 6,
-        colorAccent: '#374151',
+        id: 'kicks',
+        name: 'Nissan Kicks',
+        year: '2026',
+        bodyType: 'Subcompact SUV',
+        category: 'compact_suv',
+        priceDisplay: '$22,430 – $28,000',
+        priceScore: 2, speedScore: 2, sizeScore: 3, styleScore: 4, rarityScore: 2, funScore: 3, practicalityScore: 5,
+        colorAccent: '#b45309',
         emoji: '🚙',
-        description: "The best-selling vehicle on earth. Fast, practical, minimalist, polarizing.",
-        note: "0–60 in 3.5s · 330 mi range"
+        description: "City-ready and freshly redesigned. More style than its price tag has any right to suggest.",
+        note: "Fully redesigned 2026 · 12.3\" touchscreen standard"
       },
       {
-        id: 'ioniq5', name: 'Hyundai Ioniq 5', year: '2025', bodyType: 'Electric SUV',
-        priceDisplay: '$42,650 – $55,000',
-        priceScore: 5, speedScore: 8, sizeScore: 5, styleScore: 8, rarityScore: 5, funScore: 8, practicalityScore: 4,
-        colorAccent: '#4338ca',
+        id: 'rogue',
+        name: 'Nissan Rogue',
+        year: '2026',
+        bodyType: 'Compact SUV',
+        category: 'compact_suv',
+        priceDisplay: '$30,285 – $40,000',
+        priceScore: 3, speedScore: 3, sizeScore: 5, styleScore: 4, rarityScore: 2, funScore: 3, practicalityScore: 7,
+        colorAccent: '#0c4a6e',
         emoji: '🚙',
-        description: "Retro-futuristic design, blazing fast charging, and genuinely quick. Stand-out EV.",
-        note: "0–60 in 3.4s · 266 mi range"
+        description: "Nissan's best-seller and for good reason. Practical, versatile, and family-ready.",
+        note: "201 hp turbo · 1,500 lb tow · standard ProPilot Assist on higher trims"
       },
       {
-        id: 'highlander', name: 'Toyota Highlander', year: '2025', bodyType: 'Midsize SUV',
-        priceDisplay: '$42,700 – $55,000',
-        priceScore: 5, speedScore: 3, sizeScore: 8, styleScore: 4, rarityScore: 2, funScore: 3, practicalityScore: 8,
-        colorAccent: '#6b7280',
+        id: 'murano',
+        name: 'Nissan Murano',
+        year: '2026',
+        bodyType: 'Midsize SUV',
+        category: 'midsize_suv',
+        priceDisplay: '$42,965 – $52,000',
+        priceScore: 5, speedScore: 4, sizeScore: 6, styleScore: 7, rarityScore: 4, funScore: 5, practicalityScore: 6,
+        colorAccent: '#7c3aed',
         emoji: '🚙',
-        description: "Seats eight, hauls everything, never breaks down. The family road trip champion.",
-        note: "Seats 8 · Available hybrid"
+        description: "The stylish one in the SUV lineup. Upscale, smooth, and a little more interesting than average.",
+        note: "260 hp V6 · distinctive coupe-like roofline"
       },
       {
-        id: 'pilot', name: 'Honda Pilot', year: '2025', bodyType: 'Midsize SUV',
-        priceDisplay: '$43,850 – $54,000',
-        priceScore: 5, speedScore: 3, sizeScore: 8, styleScore: 4, rarityScore: 2, funScore: 3, practicalityScore: 9,
-        colorAccent: '#0f172a',
-        emoji: '🚙',
-        description: "The thoughtful family SUV. More clever storage solutions than IKEA.",
-        note: "Seats 8 · 5,000 lb tow"
-      },
-      {
-        id: 'telluride', name: 'Kia Telluride', year: '2025', bodyType: 'Midsize SUV',
-        priceDisplay: '$45,700 – $58,000',
-        priceScore: 5, speedScore: 3, sizeScore: 8, styleScore: 6, rarityScore: 3, funScore: 5, practicalityScore: 8,
-        colorAccent: '#134e4a',
-        emoji: '🚙',
-        description: "The SUV that embarrassed luxury brands. Stunning value, striking looks.",
-        note: "Seats 8 · Car of the Year winner"
-      },
-      {
-        id: 'grand_cherokee', name: 'Jeep Grand Cherokee L', year: '2025', bodyType: 'Midsize SUV',
-        priceDisplay: '$47,200 – $65,000',
-        priceScore: 5, speedScore: 5, sizeScore: 9, styleScore: 6, rarityScore: 3, funScore: 6, practicalityScore: 7,
+        id: 'pathfinder',
+        name: 'Nissan Pathfinder',
+        year: '2025',
+        bodyType: 'Three-Row SUV',
+        category: 'three_row_suv',
+        priceDisplay: '$43,000 – $56,000',
+        priceScore: 5, speedScore: 4, sizeScore: 8, styleScore: 4, rarityScore: 3, funScore: 4, practicalityScore: 8,
         colorAccent: '#166534',
         emoji: '🚙',
-        description: "Off-road capability with three rows. Goes anywhere, fits everyone.",
-        note: "Seats 7 · Trail Rated"
+        description: "The family road trip workhorse. Three rows, serious towing, and enough space for everyone plus the dog.",
+        note: "Seats 7–8 · 284 hp V6 · tows up to 6,000 lbs"
       },
       {
-        id: 'cadxt5', name: 'Cadillac XT5', year: '2025', bodyType: 'Luxury SUV',
-        priceDisplay: '$44,295 – $58,000',
-        priceScore: 5, speedScore: 5, sizeScore: 6, styleScore: 7, rarityScore: 5, funScore: 6, practicalityScore: 6,
+        id: 'armada',
+        name: 'Nissan Armada',
+        year: '2026',
+        bodyType: 'Full-Size SUV',
+        category: 'full_size_suv',
+        priceDisplay: '$58,840 – $80,000',
+        priceScore: 7, speedScore: 7, sizeScore: 10, styleScore: 6, rarityScore: 4, funScore: 6, practicalityScore: 8,
+        colorAccent: '#1c1917',
+        emoji: '🚙',
+        description: "All-new and properly powerful. When you need to move everything and everyone at once.",
+        note: "All-new 2026 · 425 hp twin-turbo V6 · 8,500 lb tow · seats up to 8"
+      },
+      {
+        id: 'frontier',
+        name: 'Nissan Frontier',
+        year: '2025',
+        bodyType: 'Midsize Pickup Truck',
+        category: 'truck',
+        priceDisplay: '$32,050 – $44,000',
+        priceScore: 4, speedScore: 5, sizeScore: 7, styleScore: 4, rarityScore: 3, funScore: 5, practicalityScore: 8,
         colorAccent: '#92400e',
-        emoji: '🚙',
-        description: "American luxury in a compact SUV form. Plush, quiet, and distinctive.",
-        note: null
+        emoji: '🛻',
+        description: "The no-nonsense midsize truck. Built tough, priced right, and doesn't try to be anything it isn't.",
+        note: "310 hp V6 · tows up to 6,720 lbs"
       },
       {
-        id: 'volvo_xc90', name: 'Volvo XC90', year: '2025', bodyType: 'Luxury SUV',
-        priceDisplay: '$51,550 – $72,000',
-        priceScore: 6, speedScore: 5, sizeScore: 8, styleScore: 7, rarityScore: 5, funScore: 6, practicalityScore: 7,
-        colorAccent: '#475569',
-        emoji: '🚙',
-        description: "Scandinavia's finest SUV. Serenely safe, understated luxury, world-class interior.",
-        note: "Seats 7 · Available PHEV"
+        id: 'nissanz',
+        name: 'Nissan Z',
+        year: '2025',
+        bodyType: 'Sports Car',
+        category: 'sports_car',
+        priceDisplay: '$42,970 – $56,000',
+        priceScore: 5, speedScore: 9, sizeScore: 2, styleScore: 9, rarityScore: 7, funScore: 10, practicalityScore: 1,
+        colorAccent: '#b91c1c',
+        emoji: '🏎️',
+        description: "An icon reborn. Twin-turbo V6, rear-wheel drive, and a lineage going back to 1969.",
+        note: "400 hp twin-turbo V6 · 0–60 in ~4.5s · 6-speed manual available"
       },
       {
-        id: 'genesis_gv80', name: 'Genesis GV80', year: '2025', bodyType: 'Luxury SUV',
-        priceDisplay: '$52,200 – $70,000',
-        priceScore: 6, speedScore: 6, sizeScore: 6, styleScore: 8, rarityScore: 6, funScore: 7, practicalityScore: 6,
-        colorAccent: '#1e293b',
-        emoji: '🚙',
-        description: "Korea's answer to BMW and Mercedes. Jaw-dropping interior, under-the-radar appeal.",
-        note: null
-      },
-      {
-        id: 'lexus_gx', name: 'Lexus GX 550', year: '2025', bodyType: 'Luxury SUV',
-        priceDisplay: '$52,700 – $72,000',
-        priceScore: 6, speedScore: 5, sizeScore: 7, styleScore: 7, rarityScore: 6, funScore: 7, practicalityScore: 6,
-        colorAccent: '#3f3f46',
-        emoji: '🚙',
-        description: "Off-road luxury done the Lexus way. Tough enough to go anywhere, refined enough to regret going there.",
-        note: null
-      },
-      {
-        id: 'cadct5', name: 'Cadillac CT5', year: '2025', bodyType: 'Luxury Sedan',
-        priceDisplay: '$48,990 – $72,000',
-        priceScore: 6, speedScore: 7, sizeScore: 5, styleScore: 7, rarityScore: 6, funScore: 7, practicalityScore: 4,
-        colorAccent: '#fbbf24',
+        id: 'leaf',
+        name: 'Nissan Leaf',
+        year: '2026',
+        bodyType: 'Electric Hatchback',
+        category: 'electric',
+        priceDisplay: '$29,990 – $38,000',
+        priceScore: 3, speedScore: 3, sizeScore: 3, styleScore: 4, rarityScore: 3, funScore: 4, practicalityScore: 5,
+        colorAccent: '#15803d',
         emoji: '🚗',
-        description: "The last American luxury sports sedan standing. Bold, V8-powered, and defiant.",
-        note: null
+        description: "The OG mass-market EV, now better than ever. Affordable, practical, and zero-emissions.",
+        note: "All-new 2026 · under $30k · improved range"
       },
       {
-        id: 'escalade', name: 'Cadillac Escalade', year: '2025', bodyType: 'Full-Size Luxury SUV',
-        priceDisplay: '$58,900 – $105,000',
-        priceScore: 7, speedScore: 6, sizeScore: 10, styleScore: 8, rarityScore: 5, funScore: 7, practicalityScore: 7,
-        colorAccent: '#1c1917',
+        id: 'ariya',
+        name: 'Nissan ARIYA',
+        year: '2025',
+        bodyType: 'Electric SUV',
+        category: 'electric',
+        priceDisplay: '$39,770 – $60,000',
+        priceScore: 5, speedScore: 7, sizeScore: 5, styleScore: 8, rarityScore: 5, funScore: 7, practicalityScore: 6,
+        colorAccent: '#1e40af',
         emoji: '🚙',
-        description: "American excess at its most unapologetic. The original luxury SUV, still the king.",
-        note: "Seats 7–8 · Available Super Cruise"
-      },
-      {
-        id: 'bmwm2', name: 'BMW M2', year: '2025', bodyType: 'Sports Coupe',
-        priceDisplay: '$65,500 – $78,000',
-        priceScore: 7, speedScore: 9, sizeScore: 3, styleScore: 9, rarityScore: 7, funScore: 10, practicalityScore: 1,
-        colorAccent: '#1e3a5f',
-        emoji: '🏎️',
-        description: "The last pure M car. Analog thrills in the age of digital everything.",
-        note: "0–60 in 4.1s"
-      },
-      {
-        id: 'corvette', name: 'Chevrolet Corvette', year: '2025', bodyType: 'Sports Coupe',
-        priceDisplay: '$68,300 – $95,000',
-        priceScore: 7, speedScore: 10, sizeScore: 3, styleScore: 10, rarityScore: 7, funScore: 10, practicalityScore: 1,
-        colorAccent: '#fbbf24',
-        emoji: '🏎️',
-        description: "Mid-engine American supercar. 0–60 in under 3 seconds. You're welcome, world.",
-        note: "0–60 in 2.9s"
-      },
-      {
-        id: 'model_s', name: 'Tesla Model S', year: '2025', bodyType: 'Electric Sedan',
-        priceDisplay: '$68,990 – $90,000',
-        priceScore: 8, speedScore: 10, sizeScore: 5, styleScore: 9, rarityScore: 6, funScore: 9, practicalityScore: 4,
-        colorAccent: '#111827',
-        emoji: '🚗',
-        description: "The Plaid does 0–60 in 1.99s. No exhaust note, just science fiction.",
-        note: "0–60 in 1.99s (Plaid) · 405 mi range"
-      },
-      {
-        id: 'lucid_gt', name: 'Lucid Air Grand Touring', year: '2025', bodyType: 'Electric Luxury Sedan',
-        priceDisplay: '$69,900 – $88,000',
-        priceScore: 8, speedScore: 9, sizeScore: 5, styleScore: 9, rarityScore: 8, funScore: 9, practicalityScore: 4,
-        colorAccent: '#1e1b4b',
-        emoji: '🚗',
-        description: "516 miles of range. The future of luxury arrived early and smells like leather.",
-        note: "516 mi range · 0–60 in 3.0s"
-      },
-      {
-        id: 'cayman', name: 'Porsche 718 Cayman', year: '2025', bodyType: 'Sports Coupe',
-        priceDisplay: '$68,300 – $90,000',
-        priceScore: 7, speedScore: 8, sizeScore: 3, styleScore: 10, rarityScore: 8, funScore: 10, practicalityScore: 1,
-        colorAccent: '#7c3aed',
-        emoji: '🏎️',
-        description: "Mid-engine perfection. The benchmark for how a sports car should feel.",
-        note: "0–60 in 4.4s"
-      },
-      {
-        id: 'g_class', name: 'Mercedes G-Class', year: '2025', bodyType: 'Luxury SUV',
-        priceDisplay: '$145,000 – $175,000',
-        priceScore: 10, speedScore: 7, sizeScore: 8, styleScore: 10, rarityScore: 9, funScore: 9, practicalityScore: 6,
-        colorAccent: '#1c1917',
-        emoji: '🚙',
-        description: "45 years of design: zero changes, zero apologies. The boxy legend lives on.",
-        note: "Turns heads. Every. Single. Time."
-      },
-      {
-        id: 'porsche911', name: 'Porsche 911', year: '2025', bodyType: 'Sports Coupe',
-        priceDisplay: '$120,100 – $200,000',
-        priceScore: 9, speedScore: 10, sizeScore: 3, styleScore: 10, rarityScore: 9, funScore: 10, practicalityScore: 1,
-        colorAccent: '#c2410c',
-        emoji: '🏎️',
-        description: "The benchmark sports car since 1963. Rear engine, rear-wheel-drive, religious experience.",
-        note: "0–60 in 3.1s (Carrera)"
-      },
-      {
-        id: 'amg_gt', name: 'Mercedes-AMG GT 55', year: '2025', bodyType: 'Sports Coupe',
-        priceDisplay: '$134,900 – $165,000',
-        priceScore: 9, speedScore: 9, sizeScore: 4, styleScore: 10, rarityScore: 9, funScore: 10, practicalityScore: 1,
-        colorAccent: '#111827',
-        emoji: '🏎️',
-        description: "German theater on four wheels. The AMG GT is violent, beautiful, and loud.",
-        note: "0–60 in 3.7s · AMG 4.0L V8"
-      },
-      {
-        id: 'lucid_sapphire', name: 'Lucid Air Sapphire', year: '2025', bodyType: 'Electric Hypercar Sedan',
-        priceDisplay: '$249,000+',
-        priceScore: 10, speedScore: 10, sizeScore: 5, styleScore: 10, rarityScore: 10, funScore: 10, practicalityScore: 3,
-        colorAccent: '#4c1d95',
-        emoji: '🚗',
-        description: "1,234 horsepower. 0–60 in 1.89 seconds. A family sedan from another dimension.",
-        note: "0–60 in 1.89s · Fastest sedan ever made"
+        description: "Nissan's premium EV flagship. Sleek, fast, and the closest thing they make to a tech statement.",
+        note: "238–389 hp · up to 300 miles range · 800V fast charging capability"
       }
+    ];
+
+    // ═══════════════════════════════════════════════════════════
+    // CATEGORIES
+    // ═══════════════════════════════════════════════════════════
+
+    const CATEGORIES = [
+      {
+        id: 'sedan',
+        name: 'Sedan',
+        icon: '🚗',
+        desc: 'Traditional car with a trunk. Great for commuters and families.',
+      },
+      {
+        id: 'compact_suv',
+        name: 'Compact SUV',
+        icon: '🚙',
+        desc: 'Elevated ride, practical cargo, and versatile.',
+      },
+      {
+        id: 'midsize_suv',
+        name: 'Midsize SUV',
+        icon: '🚙',
+        desc: 'More space and power than a compact.',
+      },
+      {
+        id: 'three_row_suv',
+        name: '3-Row SUV',
+        icon: '🚐',
+        desc: 'Seats 7–8. Built for big families.',
+      },
+      {
+        id: 'full_size_suv',
+        name: 'Full-Size SUV',
+        icon: '🚙',
+        desc: 'Maximum size and towing power.',
+      },
+      {
+        id: 'truck',
+        name: 'Pickup Truck',
+        icon: '🛻',
+        desc: 'A bed, towing capacity, and real capability.',
+      },
+      {
+        id: 'sports_car',
+        name: 'Sports Car',
+        icon: '🏎️',
+        desc: 'Fast, fun, and built to be driven hard.',
+      },
+      {
+        id: 'electric',
+        name: 'Electric',
+        icon: '⚡',
+        desc: 'Zero emissions. Nissan has been here since 2011.',
+      },
     ];
 
     const REJECTION_AXES = [
@@ -1213,6 +1033,8 @@
     function freshState() {
       return {
         currentCar: null,
+        selectedCategory: null,   // category id or null (not-sure)
+        activeDeck: [],            // cars in play for this session
         selectedReasons: new Set(),
         preferences: {
           minSpeed: 0,       maxSpeed: 10,
@@ -1223,7 +1045,7 @@
           minPracticality: 0, maxPracticality: 10,
           rejectedIds: []
         },
-        phase: 'showing'
+        phase: 'category'   // 'category' | 'showing' | 'rejected' | 'confirmed'
       };
     }
 
@@ -1234,7 +1056,7 @@
     // ═══════════════════════════════════════════════════════════
 
     function filterCandidates(prefs) {
-      return CAR_DATABASE.filter(car => {
+      return state.activeDeck.filter(car => {
         if (prefs.rejectedIds.includes(car.id))                return false;
         if (car.speedScore        < prefs.minSpeed)            return false;
         if (car.speedScore        > prefs.maxSpeed)            return false;
@@ -1253,9 +1075,8 @@
     }
 
     function scoreCandidate(car, prefs) {
-      // Score by proximity to the midpoint of each preference window
-      const mid      = (mn, mx) => (mn + mx) / 2;
-      const range    = (mn, mx) => Math.max(1, mx - mn);
+      const mid       = (mn, mx) => (mn + mx) / 2;
+      const range     = (mn, mx) => Math.max(1, mx - mn);
       const proximity = (val, mn, mx) => 1 - Math.abs(val - mid(mn, mx)) / range(mn, mx);
 
       let score = 0;
@@ -1283,7 +1104,6 @@
       const prefs = state.preferences;
       let candidates = filterCandidates(prefs);
 
-      // Relax up to 3 times if stuck
       for (let i = 0; i < 3 && candidates.length === 0; i++) {
         relaxPreferences(prefs);
         candidates = filterCandidates(prefs);
@@ -1297,7 +1117,6 @@
 
     function applyRejectionReasons(reasons) {
       const prefs = state.preferences;
-      // Build a lookup from label → effects across all axes
       const effectsMap = {};
       REJECTION_AXES.forEach(axis => {
         if (axis.single) {
@@ -1317,7 +1136,43 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // RENDER
+    // RENDER — CATEGORY SCREEN
+    // ═══════════════════════════════════════════════════════════
+
+    function renderCategories() {
+      const grid = document.getElementById('category-grid');
+      grid.innerHTML = '';
+
+      CATEGORIES.forEach(cat => {
+        const carsInCat = CAR_DATABASE.filter(c => c.category === cat.id);
+        const btn = document.createElement('button');
+        btn.className = 'category-card';
+        btn.innerHTML = `
+          <span class="category-card-icon">${cat.icon}</span>
+          <span class="category-card-name">${cat.name}</span>
+          <span class="category-card-desc">${cat.desc}</span>
+          <span class="category-card-count">${carsInCat.length} model${carsInCat.length !== 1 ? 's' : ''}</span>
+        `;
+        btn.addEventListener('click', () => handleCategorySelect(cat.id));
+        grid.appendChild(btn);
+      });
+
+      // "Not sure" card — full width at bottom
+      const notSureBtn = document.createElement('button');
+      notSureBtn.className = 'category-card not-sure';
+      notSureBtn.innerHTML = `
+        <span class="category-card-icon">🤔</span>
+        <div>
+          <span class="category-card-name">Not sure</span>
+          <span class="category-card-desc" style="display:block;margin-top:2px">We'll start you off with a good all-rounder.</span>
+        </div>
+      `;
+      notSureBtn.addEventListener('click', () => handleCategorySelect(null));
+      grid.appendChild(notSureBtn);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // RENDER — CAR CARD
     // ═══════════════════════════════════════════════════════════
 
     function renderCard(car) {
@@ -1371,7 +1226,6 @@
       document.getElementById('accept-btn').addEventListener('click', handleAccept);
     }
 
-    // Simple color darkening utility
     function darken(hex) {
       let r = parseInt(hex.slice(1,3),16);
       let g = parseInt(hex.slice(3,5),16);
@@ -1385,7 +1239,7 @@
     function renderBubbles() {
       const container = document.getElementById('bubble-container');
       container.innerHTML = '';
-      let btnIndex = 0; // global index for stagger delay
+      let btnIndex = 0;
 
       REJECTION_AXES.forEach((axis, axisIndex) => {
         const row = document.createElement('div');
@@ -1442,6 +1296,7 @@
     function showConfirmationScreen(car) {
       document.getElementById('card-stage').innerHTML = '';
       document.getElementById('rejection-panel').classList.add('hidden');
+      document.getElementById('card-phase-header').style.display = 'none';
 
       const screen = document.getElementById('confirmation-screen');
       screen.classList.remove('hidden');
@@ -1450,7 +1305,7 @@
 
       document.getElementById('confirm-car-name').textContent = `${car.year} ${car.name}`;
       document.getElementById('confirm-message').textContent =
-        `You found your perfect match — ${car.description.toLowerCase().replace(/\.$/, '')}. Time to visit a dealer!`;
+        `You found your perfect match — ${car.description.toLowerCase().replace(/\.$/, '')}. Time to visit a Nissan dealer!`;
 
       document.getElementById('restart-btn').addEventListener('click', handleRestart);
     }
@@ -1458,6 +1313,7 @@
     function showEmptyScreen() {
       document.getElementById('card-stage').innerHTML = '';
       document.getElementById('rejection-panel').classList.add('hidden');
+      document.getElementById('card-phase-header').style.display = 'none';
       const screen = document.getElementById('empty-screen');
       screen.classList.remove('hidden');
       document.getElementById('empty-restart-btn').addEventListener('click', handleRestart);
@@ -1467,13 +1323,33 @@
     // EVENT HANDLERS
     // ═══════════════════════════════════════════════════════════
 
+    function handleCategorySelect(categoryId) {
+      state.selectedCategory = categoryId;
+
+      if (categoryId === null) {
+        // "Not sure" — default to Altima as generic all-rounder
+        state.activeDeck = CAR_DATABASE;
+        const altima = CAR_DATABASE.find(c => c.id === 'altima');
+        state.currentCar = altima;
+      } else {
+        state.activeDeck = CAR_DATABASE.filter(c => c.category === categoryId);
+        state.currentCar = state.activeDeck[0];
+      }
+
+      state.phase = 'showing';
+
+      // Transition: hide category screen, show card
+      document.getElementById('category-screen').classList.add('hidden');
+      document.getElementById('card-phase-header').style.display = 'flex';
+      renderCard(state.currentCar);
+    }
+
     function handleAccept() {
       state.phase = 'confirmed';
       showConfirmationScreen(state.currentCar);
     }
 
     function handleReject() {
-      // Mark rejected immediately but panel still shows this card
       state.preferences.rejectedIds.push(state.currentCar.id);
       document.getElementById('reject-btn').disabled = true;
       document.getElementById('accept-btn').disabled = true;
@@ -1485,7 +1361,6 @@
       const axisIndex = btn.dataset.axisIndex;
       const side = btn.dataset.side;
 
-      // Deselect the sibling on the opposite side of this axis (mutual exclusion)
       if (side !== 'single') {
         const siblingSelector = `.reason-bubble[data-axis-index="${axisIndex}"]:not([data-side="${side}"])`;
         const sibling = document.querySelector(siblingSelector);
@@ -1495,7 +1370,6 @@
         }
       }
 
-      // Toggle this button
       if (state.selectedReasons.has(reason)) {
         state.selectedReasons.delete(reason);
         btn.classList.remove('active');
@@ -1512,7 +1386,6 @@
 
       const nextCar = getNextRecommendation();
 
-      // Animate card out
       const card = document.getElementById('current-card');
       if (card) {
         card.classList.add('exiting');
@@ -1525,7 +1398,6 @@
     }
 
     function finishTransition(nextCar) {
-      // Hide rejection panel
       const panel = document.getElementById('rejection-panel');
       panel.classList.add('hidden');
       document.getElementById('bubble-container').innerHTML = '';
@@ -1548,22 +1420,19 @@
       document.getElementById('rejection-panel').classList.add('hidden');
       document.getElementById('bubble-container').innerHTML = '';
       document.getElementById('find-better-btn').classList.add('hidden');
-      init();
+      document.getElementById('card-stage').innerHTML = '';
+      document.getElementById('card-phase-header').style.display = 'none';
+      document.getElementById('category-screen').classList.remove('hidden');
     }
 
     // ═══════════════════════════════════════════════════════════
     // INIT
     // ═══════════════════════════════════════════════════════════
 
-    function init() {
-      const corolla = CAR_DATABASE.find(c => c.id === 'corolla');
-      state.currentCar = corolla;
-      renderCard(corolla);
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('find-better-btn').addEventListener('click', handleFindBetter);
-      init();
+      document.getElementById('change-category-btn').addEventListener('click', handleRestart);
+      renderCategories();
     });
   </script>
 </body>
