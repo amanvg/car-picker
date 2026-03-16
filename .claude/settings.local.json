@@ -24,6 +24,8 @@
       "Bash(ls -la /Users/aman.gandhi/Documents/GitHub/amanvg-web/*.js /Users/aman.gandhi/Documents/GitHub/amanvg-web/*.json)",
       "WebFetch(domain:site.api.espn.com)",
       "Bash(curl -s \"https://site.api.espn.com/apis/v2/sports/baseball/mlb/standings\")"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
