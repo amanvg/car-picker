@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/teams/9726/schedule\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); events=d.get\\(''''events'''',[]\\); print\\(f''''Total events: {len\\(events\\)}''''\\); print\\(''''First 3 events:''''\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]} - state: {e[\"\"competitions\"\"][0][\"\"status\"\"][\"\"type\"\"][\"\"state\"\"]}''''\\) for e in events[:3]]; print\\(''''Last 3 events:''''\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]} - state: {e[\"\"competitions\"\"][0][\"\"status\"\"][\"\"type\"\"][\"\"state\"\"]}''''\\) for e in events[-3:]]\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); events=d.get\\(''''events'''',[]\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]} - state: {e[\"\"competitions\"\"][0][\"\"status\"\"][\"\"type\"\"][\"\"state\"\"]}''''\\) for e in events]\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/teams/9726/schedule?limit=50\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); events=d.get\\(''''events'''',[]\\); print\\(f''''Total: {len\\(events\\)}''''\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]} - state: {e[\"\"competitions\"\"][0][\"\"status\"\"][\"\"type\"\"][\"\"state\"\"]}''''\\) for e in events]\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260318\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); events=d.get\\(''''events'''',[]\\); print\\(f''''Total: {len\\(events\\)}''''\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]} - state: {e[\"\"competitions\"\"][0][\"\"status\"\"][\"\"type\"\"][\"\"state\"\"]}''''\\) for e in events[:10]]\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260316-20260330&limit=50\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260317&limit=50\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); events=d.get\\(''''events'''',[]\\); print\\(f''''Mar 17 events: {len\\(events\\)}''''\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]}''''\\) for e in events]\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260318&limit=50\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); events=d.get\\(''''events'''',[]\\); print\\(f''''Mar 18 events: {len\\(events\\)}''''\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]}''''\\) for e in events]\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260319&limit=50\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); events=d.get\\(''''events'''',[]\\); print\\(f''''Mar 19 events: {len\\(events\\)}''''\\); [print\\(f''''  {e[\"\"date\"\"][:10]} - {e[\"\"name\"\"]}''''\\) for e in events]\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260316-20260401&limit=100\")",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260401-20260430&limit=100\")",
+      "Bash(curl -s \"https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20260316-20260406&limit=100\")"
+    ]
+  }
+}

@@ -604,10 +604,33 @@
             let lastGame = null, liveGame = null, nextGame = null;
             for (const ev of events) {
                 const state = ev.competitions?.[0]?.status?.type?.state;
-                if (state === 'post') lastGame = ev;
+                if (state === 'post' && !lastGame) lastGame = ev;
                 else if (state === 'in') liveGame = ev;
                 else if (state === 'pre' && !nextGame) nextGame = ev;
             }
+
+            // Some leagues (e.g. MLS) don't include future games in the team schedule endpoint.
+            // Fall back to the scoreboard to find the next upcoming game.
+            if (!nextGame) {
+                const today = new Date();
+                const future = new Date(today);
+                future.setDate(today.getDate() + 21);
+                const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
+                try {
+                    const sbRes = await fetch(`${ESPN}/${team.sport}/${team.league}/scoreboard?dates=${fmt(today)}-${fmt(future)}&limit=100`);
+                    if (sbRes.ok) {
+                        const sbData = await sbRes.json();
+                        for (const ev of sbData.events || []) {
+                            const comp = ev.competitions?.[0];
+                            if (comp?.competitors?.some(c => String(c.team?.id) === String(team.id))) {
+                                nextGame = ev;
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) { /* non-critical */ }
+            }
+
             return { lastGame, liveGame, nextGame };
         }
 
