@@ -707,6 +707,160 @@
             .topnav-inner { padding: 0 16px; }
             .schedule-view { padding: 16px; gap: 20px; }
         }
+
+        /* ── Roster view ──────────────────────────────────────────── */
+
+        .roster-view {
+            flex: 1;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: row;
+            gap: 16px;
+            align-items: stretch;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .roster-col {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .roster-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* Boxes that should grow to fill remaining space */
+        .roster-box.grow { flex: 1; }
+
+        .roster-box-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .roster-box-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-tertiary);
+        }
+
+        .roster-box-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .roster-player-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 16px;
+            border-bottom: 1px solid rgba(100, 160, 220, 0.08);
+            flex: 1;
+            min-height: 0;
+        }
+
+        .roster-player-row:last-child { border-bottom: none; }
+
+        .roster-player-num {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            width: 14px;
+            text-align: center;
+            flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .roster-player-headshot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--border);
+        }
+
+        .roster-player-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .roster-player-name {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .roster-player-jersey {
+            font-size: 0.68rem;
+            color: var(--text-tertiary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .roster-player-stats {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .roster-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 34px;
+        }
+
+        .roster-stat-val {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .roster-stat-lbl {
+            font-size: 0.58rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-tertiary);
+        }
+
+        .roster-loading {
+            padding: 20px 16px;
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 900px) {
+            .roster-view { padding: 16px; gap: 12px; flex-direction: column; overflow-y: auto; }
+            .roster-box { min-height: unset; }
+            .roster-box.grow { flex: unset; }
+            .roster-player-row { padding: 10px 16px; flex: unset; }
+        }
     </style>
 </head>
 <body>
@@ -731,6 +885,10 @@
                 <span class="sidebar-icon">📅</span>
                 <span>Overview</span>
             </button>
+            <button class="sidebar-item" onclick="showView('roster')" id="nav-roster">
+                <span class="sidebar-icon">⚾</span>
+                <span>Roster</span>
+            </button>
         </aside>
 
         <!-- MAIN -->
@@ -744,6 +902,13 @@
                 <div class="refresh-bar">
                     <span id="last-updated"></span>
                     <button id="refresh-btn" onclick="manualRefresh()">Refresh</button>
+                </div>
+            </div>
+
+            <!-- VIEW: Roster -->
+            <div class="view" id="view-roster">
+                <div class="roster-view" id="roster-view">
+                    <div class="loading-view">Loading roster…</div>
                 </div>
             </div>
 
@@ -763,11 +928,17 @@
 
         // ── View switching ───────────────────────────────────────
 
+        const _rosterLoaded = { done: false };
+
         function showView(id) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
             document.getElementById('view-' + id)?.classList.add('active');
             document.getElementById('nav-' + id)?.classList.add('active');
+            if (id === 'roster' && !_rosterLoaded.done) {
+                _rosterLoaded.done = true;
+                refreshRoster();
+            }
         }
 
         // ── Init ─────────────────────────────────────────────────
@@ -1263,6 +1434,216 @@
                     <tbody>${rows}</tbody>
                 </table>
             </div>`;
+        }
+
+        // ── Roster / Depth Chart ─────────────────────────────────
+
+        async function fetchDepthChart() {
+            if (!TEAM.id) return null;
+            try {
+                const res = await fetch(`${ESPN}/${TEAM.sport}/${TEAM.league}/teams/${TEAM.id}/depthcharts`);
+                if (!res.ok) return null;
+                const data = await res.json();
+                return data.depthchart?.[0]?.positions || null;
+            } catch (e) {
+                console.error('Depth chart fetch failed:', e);
+                return null;
+            }
+        }
+
+        async function fetchPitcherStats(athleteId) {
+            const CORE = 'https://sports.core.api.espn.com/v2/sports/baseball/leagues/mlb';
+            // Try current season (type 2 = regular season), fall back to prior year
+            for (const year of [2026, 2025]) {
+                try {
+                    const res = await fetch(`${CORE}/seasons/${year}/types/2/athletes/${athleteId}/statistics`);
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const pitching = data.splits?.categories?.find(c => c.name === 'pitching');
+                    if (!pitching) continue;
+                    const getStat = name => pitching.stats.find(s => s.name === name)?.displayValue ?? '—';
+                    return {
+                        innings:    getStat('innings'),
+                        saves:      getStat('saves'),
+                        strikeouts: getStat('strikeouts'),
+                        era:        getStat('ERA'),
+                        war:        getStat('WARBR'),
+                    };
+                } catch { continue; }
+            }
+            return null;
+        }
+
+        async function fetchBatterStats(athleteId) {
+            const CORE = 'https://sports.core.api.espn.com/v2/sports/baseball/leagues/mlb';
+            for (const year of [2026, 2025]) {
+                try {
+                    const res = await fetch(`${CORE}/seasons/${year}/types/2/athletes/${athleteId}/statistics`);
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const batting = data.splits?.categories?.find(c => c.name === 'batting');
+                    if (!batting) continue;
+                    const getStat = name => batting.stats.find(s => s.name === name)?.displayValue ?? '—';
+                    return {
+                        avg: getStat('avg'),
+                        obp: getStat('onBasePct'),
+                        slg: getStat('slugAvg'),
+                        war: getStat('WARBR'),
+                    };
+                } catch { continue; }
+            }
+            return null;
+        }
+
+        async function refreshRoster() {
+            const container = document.getElementById('roster-view');
+            try {
+                if (!TEAM.id) await lookupTeam();
+                const positions = await fetchDepthChart();
+                if (!positions) {
+                    container.innerHTML = '<div class="loading-view">Could not load roster.</div>';
+                    return;
+                }
+
+                const spAthletes = positions['p']?.athletes || [];
+                const rpAthletes = positions['rp']?.athletes || [];
+                const clAthletes = positions['cl']?.athletes || [];
+
+                // Fetch pitcher stats in parallel
+                const allAthletes = [...spAthletes, ...rpAthletes, ...clAthletes];
+                const statsArr = await Promise.all(allAthletes.map(a => fetchPitcherStats(a.id)));
+                const statsMap = {};
+                allAthletes.forEach((a, i) => { statsMap[a.id] = statsArr[i]; });
+
+                // Fetch batter stats for position starters in parallel
+                const POS_KEYS = ['c', '1b', '2b', '3b', 'ss', 'lf', 'cf', 'rf', 'dh'];
+                const posStarters = POS_KEYS.map(k => positions[k]?.athletes?.[0]).filter(Boolean);
+                const batterStatsArr = await Promise.all(posStarters.map(a => fetchBatterStats(a.id)));
+                const batterStatsMap = {};
+                posStarters.forEach((a, i) => { batterStatsMap[a.id] = batterStatsArr[i]; });
+
+                const sortByIP = athletes => [...athletes].sort((a, b) => {
+                    const ipA = parseFloat(statsMap[a.id]?.innings) || 0;
+                    const ipB = parseFloat(statsMap[b.id]?.innings) || 0;
+                    return ipB - ipA;
+                });
+
+                // Col 1: Starting Pitchers (grow) + Closers (fixed)
+                const col1 = `<div class="roster-col">
+                    ${buildRosterBox('Starting Pitchers', sortByIP(spAthletes), statsMap, 'sp', true)}
+                    ${buildRosterBox('Closers',           sortByIP(clAthletes), statsMap, 'cl', false)}
+                </div>`;
+
+                // Col 2: Relief Pitchers (grow to fill full height)
+                const col2 = `<div class="roster-col">
+                    ${buildRosterBox('Relief Pitchers', sortByIP(rpAthletes), statsMap, 'rp', true)}
+                </div>`;
+
+                // Col 3: Position Players (grow to fill full height)
+                const col3 = `<div class="roster-col">
+                    ${buildPositionBox('Starters', positions, batterStatsMap, true)}
+                </div>`;
+
+                container.innerHTML = col1 + col2 + col3;
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="loading-view" style="color:var(--red)">Failed to load roster.</div>';
+            }
+        }
+
+        function buildRosterBox(title, athletes, statsMap, type, grow) {
+            const cls = `roster-box${grow ? ' grow' : ''}`;
+            const header = `<div class="roster-box-header">
+                <div class="roster-box-title">${esc(title)}</div>
+            </div>`;
+
+            if (!athletes.length) {
+                return `<div class="${cls}">${header}<div class="roster-loading">No players found.</div></div>`;
+            }
+
+            const rows = athletes.map((a, i) => {
+                const name     = a.displayName || a.shortName || '—';
+                const jersey   = a.jersey ? `#${a.jersey}` : '';
+                const headshot = a.headshot?.href || a.links?.find(l => l.rel?.includes('headshot'))?.href || '';
+                const stats    = statsMap?.[a.id];
+
+                let statsHtml = '';
+                if (stats) {
+                    if (type === 'cl') {
+                        statsHtml = statCols([
+                            { lbl: 'SV',  val: stats.saves },
+                            { lbl: 'K',   val: stats.strikeouts },
+                            { lbl: 'ERA', val: stats.era },
+                            { lbl: 'WAR', val: stats.war },
+                        ]);
+                    } else {
+                        statsHtml = statCols([
+                            { lbl: 'IP',  val: stats.innings },
+                            { lbl: 'K',   val: stats.strikeouts },
+                            { lbl: 'ERA', val: stats.era },
+                            { lbl: 'WAR', val: stats.war },
+                        ]);
+                    }
+                }
+
+                return `<div class="roster-player-row">
+                    <span class="roster-player-num">${i + 1}</span>
+                    ${headshot
+                        ? `<img class="roster-player-headshot" src="${headshot}" alt="${esc(name)}" onerror="this.style.display='none'">`
+                        : ''
+                    }
+                    <div class="roster-player-info">
+                        <div class="roster-player-name">${esc(name)}</div>
+                        ${jersey ? `<div class="roster-player-jersey">${esc(jersey)}</div>` : ''}
+                    </div>
+                    ${statsHtml}
+                </div>`;
+            }).join('');
+
+            return `<div class="${cls}">${header}<div class="roster-box-body">${rows}</div></div>`;
+        }
+
+        function buildPositionBox(title, positions, batterStatsMap, grow) {
+            const cls = `roster-box${grow ? ' grow' : ''}`;
+            const POSITION_ORDER = ['c', '1b', '2b', '3b', 'ss', 'lf', 'cf', 'rf', 'dh'];
+
+            const header = `<div class="roster-box-header">
+                <div class="roster-box-title">${esc(title)}</div>
+            </div>`;
+
+            const rows = POSITION_ORDER.map(key => {
+                const pos = positions[key];
+                if (!pos) return '';
+                const abbr    = pos.position?.abbreviation || key.toUpperCase();
+                const starter = pos.athletes?.[0];
+                if (!starter) return '';
+                const name  = starter.displayName || starter.shortName || '—';
+                const stats = batterStatsMap?.[starter.id];
+                const statsHtml = stats ? statCols([
+                    { lbl: 'AVG', val: stats.avg },
+                    { lbl: 'OBP', val: stats.obp },
+                    { lbl: 'SLG', val: stats.slg },
+                    { lbl: 'WAR', val: stats.war },
+                ]) : '';
+                return `<div class="roster-player-row">
+                    <span class="lineup-pos">${esc(abbr)}</span>
+                    <div class="roster-player-info">
+                        <div class="roster-player-name">${esc(name)}</div>
+                    </div>
+                    ${statsHtml}
+                </div>`;
+            }).filter(Boolean).join('');
+
+            return `<div class="${cls}">${header}<div class="roster-box-body">${rows}</div></div>`;
+        }
+
+        function statCols(cols) {
+            return `<div class="roster-player-stats">${
+                cols.map(c => `<div class="roster-stat">
+                    <span class="roster-stat-val">${esc(c.val ?? '—')}</span>
+                    <span class="roster-stat-lbl">${esc(c.lbl)}</span>
+                </div>`).join('')
+            }</div>`;
         }
 
         // ── Helpers ──────────────────────────────────────────────
