@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moon Phase — amanvg</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #141414;
+      --surface: #1e1e1e;
+      --border: #2e2e2e;
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #606060;
+      --radius-card: 20px;
+      --radius-pill: 999px;
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 40px -4px rgba(0,0,0,0.5);
+      --moon: #e8dfc0;
+      --moon-shadow: #0a0a0a;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,13,13,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-back {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-back:hover { color: var(--text-primary); background: var(--border); }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 56px 32px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+    }
+
+    /* Moon canvas */
+    .moon-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    canvas {
+      border-radius: 50%;
+      box-shadow: 0 0 80px rgba(232,223,192,0.08), 0 0 160px rgba(232,223,192,0.04);
+    }
+
+    .phase-name {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      text-align: center;
+    }
+
+    .phase-sub {
+      font-size: 15px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-tertiary);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Cycle strip */
+    .cycle-wrap {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .cycle-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-tertiary);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .cycle-strip {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .cycle-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .cycle-moon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cycle-name {
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-tertiary);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .cycle-item.current .cycle-name {
+      color: var(--moon);
+    }
+
+    .cycle-item.current .cycle-moon {
+      box-shadow: 0 0 12px rgba(232,223,192,0.4);
+    }
+
+    @media (max-width: 640px) {
+      .main { padding: 40px 20px 60px; }
+      .nav-inner { padding: 0 20px; }
+      .stats { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .stat { padding: 14px 10px; }
+      .stat-value { font-size: 16px; }
+      .cycle-moon { width: 24px; height: 24px; }
+      .cycle-name { font-size: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-back" href="/">← amanvg</a>
+    <span class="nav-title">Moon Phase</span>
+    <div style="width:80px"></div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="moon-wrap">
+    <canvas id="moon" width="220" height="220"></canvas>
+    <div>
+      <div class="phase-name" id="phaseName"></div>
+      <div class="phase-sub" id="phaseSub"></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Illumination</div>
+      <div class="stat-value" id="illum"></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Day in cycle</div>
+      <div class="stat-value" id="dayInCycle"></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Next full moon</div>
+      <div class="stat-value" id="nextFull"></div>
+    </div>
+  </div>
+
+  <div class="cycle-wrap">
+    <div class="cycle-label">Lunar cycle</div>
+    <div class="cycle-strip" id="cycleStrip"></div>
+  </div>
+</main>
+
+<script>
+  const LUNAR_CYCLE = 29.53058867;
+  const KNOWN_NEW_MOON = new Date('2000-01-06T18:14:00Z').getTime();
+
+  const PHASES = [
+    { name: 'New Moon',        emoji: '🌑', min: 0,     max: 1.85  },
+    { name: 'Waxing Crescent', emoji: '🌒', min: 1.85,  max: 7.38  },
+    { name: 'First Quarter',   emoji: '🌓', min: 7.38,  max: 9.22  },
+    { name: 'Waxing Gibbous',  emoji: '🌔', min: 9.22,  max: 14.77 },
+    { name: 'Full Moon',       emoji: '🌕', min: 14.77, max: 16.61 },
+    { name: 'Waning Gibbous',  emoji: '🌖', min: 16.61, max: 22.15 },
+    { name: 'Last Quarter',    emoji: '🌗', min: 22.15, max: 23.99 },
+    { name: 'Waning Crescent', emoji: '🌘', min: 23.99, max: 29.53 },
+  ];
+
+  const CYCLE_PHASES = [
+    { name: 'New\nMoon',        day: 0    },
+    { name: 'Waxing\nCrescent', day: 3.7  },
+    { name: 'First\nQuarter',   day: 7.4  },
+    { name: 'Waxing\nGibbous',  day: 11.1 },
+    { name: 'Full\nMoon',       day: 14.77},
+    { name: 'Waning\nGibbous',  day: 18.5 },
+    { name: 'Last\nQuarter',    day: 22.15},
+    { name: 'Waning\nCrescent', day: 25.9 },
+  ];
+
+  function getMoonAge(date) {
+    const ms = date.getTime() - KNOWN_NEW_MOON;
+    const days = ms / (1000 * 60 * 60 * 24);
+    return ((days % LUNAR_CYCLE) + LUNAR_CYCLE) % LUNAR_CYCLE;
+  }
+
+  function getIllumination(age) {
+    const angle = (age / LUNAR_CYCLE) * 2 * Math.PI;
+    return (1 - Math.cos(angle)) / 2;
+  }
+
+  function getPhase(age) {
+    return PHASES.find(p => age >= p.min && age < p.max) || PHASES[0];
+  }
+
+  function daysUntilNextFull(age) {
+    const fullDay = 14.77;
+    if (age < fullDay) return Math.ceil(fullDay - age);
+    return Math.ceil(LUNAR_CYCLE - age + fullDay);
+  }
+
+  // Draw moon on canvas
+  function drawMoon(canvas, age, illumination) {
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    const r = size / 2 - 4;
+    const cx = size / 2;
+    const cy = size / 2;
+
+    ctx.clearRect(0, 0, size, size);
+
+    const waxing = age < LUNAR_CYCLE / 2;
+
+    // Draw dark disk (base)
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#0d0d0d';
+    ctx.fill();
+
+    // Draw lit portion
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Always lit on one side
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2, false); // right semi
+    ctx.fillStyle = '#e8dfc0';
+    ctx.fill();
+
+    // Overlay ellipse to create crescent/gibbous
+    const phase = illumination;
+    const ellipseX = r * Math.abs(1 - 2 * (waxing ? phase : 1 - phase));
+
+    ctx.beginPath();
+    if (waxing) {
+      // shadow covers left crescent: draw dark ellipse on right half
+      ctx.ellipse(cx, cy, ellipseX, r, 0, -Math.PI / 2, Math.PI / 2, false);
+      ctx.fillStyle = '#0d0d0d';
+    } else {
+      // shadow covers right: draw dark ellipse
+      ctx.ellipse(cx, cy, ellipseX, r, 0, Math.PI / 2, -Math.PI / 2, false);
+      ctx.fillStyle = '#0d0d0d';
+    }
+    ctx.fill();
+
+    ctx.restore();
+
+    // Subtle rim
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(232,223,192,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Draw small moon for cycle strip
+  function drawSmallMoon(canvas, dayInCycle) {
+    const age = dayInCycle;
+    const illum = getIllumination(age);
+    drawMoon(canvas, age, illum);
+  }
+
+  function render() {
+    const now = new Date();
+    const age = getMoonAge(now);
+    const illum = getIllumination(age);
+    const phase = getPhase(age);
+    const nextFull = daysUntilNextFull(age);
+
+    // Main moon
+    drawMoon(document.getElementById('moon'), age, illum);
+
+    // Phase name
+    document.getElementById('phaseName').textContent = `${phase.emoji} ${phase.name}`;
+    document.getElementById('phaseSub').textContent =
+      now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+    // Stats
+    document.getElementById('illum').textContent = `${Math.round(illum * 100)}%`;
+    document.getElementById('dayInCycle').textContent = `${Math.round(age * 10) / 10} / 29.5`;
+    document.getElementById('nextFull').textContent =
+      nextFull === 0 ? 'Tonight' : `${nextFull}d`;
+
+    // Cycle strip
+    const strip = document.getElementById('cycleStrip');
+    strip.innerHTML = '';
+    CYCLE_PHASES.forEach(cp => {
+      const isCurrent = Math.abs(age - cp.day) < 1.85;
+      const item = document.createElement('div');
+      item.className = 'cycle-item' + (isCurrent ? ' current' : '');
+
+      const c = document.createElement('canvas');
+      c.width = 64;
+      c.height = 64;
+      c.className = 'cycle-moon';
+      drawSmallMoon(c, cp.day);
+
+      const label = document.createElement('div');
+      label.className = 'cycle-name';
+      label.textContent = cp.name.replace('\\n', '\n');
+      label.style.whiteSpace = 'pre-line';
+
+      item.appendChild(c);
+      item.appendChild(label);
+      strip.appendChild(item);
+    });
+  }
+
+  render();
+</script>
+
+</body>
+</html>
