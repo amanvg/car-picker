@@ -175,6 +175,12 @@
       border-color: rgba(251, 191, 36, 0.25);
     }
 
+    .card-badge.agent {
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      border-color: rgba(167, 139, 250, 0.25);
+    }
+
     .card-title {
       font-size: 20px;
       font-weight: 700;
@@ -394,10 +400,25 @@
       </a>
 
 
+
+    </div>
+  </main>
+
+  <!-- AGENT SECTION HEADER -->
+  <div class="section-header">
+    <h2>Built by muse — an agent I made</h2>
+    <hr class="section-divider">
+  </div>
+
+  <!-- AGENT PROJECT GRID -->
+  <main class="projects">
+    <div class="grid">
+
       <a class="card" href="/weather/">
         <div class="card-stripe" style="background: linear-gradient(90deg, #0ea5e9, #6366f1);"></div>
         <div class="card-top">
           <div class="card-icon-wrap">⛅</div>
+          <span class="card-badge agent">muse</span>
         </div>
         <div class="card-title">Seattle Weather</div>
         <p class="card-desc">Live conditions and 7-day forecast for Seattle, updated every 10 minutes.</p>
@@ -410,11 +431,11 @@
         </div>
       </a>
 
-
       <a class="card" href="/moonphase/">
         <div class="card-stripe" style="background: linear-gradient(90deg, #1e1b4b, #6d28d9);"></div>
         <div class="card-top">
           <div class="card-icon-wrap">🌕</div>
+          <span class="card-badge agent">muse</span>
         </div>
         <div class="card-title">Moon Phase</div>
         <p class="card-desc">Today's lunar phase, illumination percentage, and full cycle visualization — no API needed.</p>
