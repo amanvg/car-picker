@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tempest Station — amanvg</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #141414;
+      --surface: #1e1e1e;
+      --surface-2: #232323;
+      --border: #2e2e2e;
+      --border-hover: #3d3d3d;
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #606060;
+      --radius-card: 20px;
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 40px -4px rgba(0,0,0,0.5);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,13,13,0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 980px; margin: 0 auto;
+      padding: 0 32px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-back {
+      font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      text-decoration: none; padding: 6px 12px; border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-back:hover { color: var(--text-primary); background: var(--border); }
+    .nav-title { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }
+
+    .main { max-width: 980px; margin: 0 auto; padding: 40px 32px 80px; }
+
+    /* ── Hero ── */
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-md);
+      padding: 40px;
+      margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      position: relative; overflow: hidden;
+    }
+    .hero-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #0ea5e9, #6366f1);
+    }
+    .hero-station {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 8px;
+    }
+    .hero-temp {
+      font-size: 88px; font-weight: 800;
+      letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px;
+    }
+    .hero-desc { font-size: 18px; font-weight: 500; color: var(--text-secondary); }
+    .hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex-shrink: 0; }
+    .hero-icon { font-size: 88px; line-height: 1; }
+    .hero-meta {
+      font-size: 13px; color: var(--text-tertiary); text-align: right; line-height: 1.6;
+    }
+
+    /* ── Stats grid ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px; margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px 20px;
+    }
+    .stat-label {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.09em; color: var(--text-tertiary); margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+    }
+    .stat-unit { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .stat-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.09em; color: var(--text-tertiary); margin-bottom: 12px;
+    }
+
+    /* ── Charts ── */
+    .charts-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 14px; margin-bottom: 32px;
+    }
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-card); padding: 20px 14px 10px; overflow: hidden;
+    }
+    .chart-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .chart-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-tertiary);
+    }
+    .chart-current {
+      font-size: 18px; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .chart-current-unit { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+    .chart-empty {
+      padding: 36px 20px; text-align: center;
+      color: var(--text-tertiary); font-size: 13px;
+    }
+
+    /* ── Forecast ── */
+    .forecast {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
+    }
+    .forecast-day {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px 8px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .forecast-name {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-tertiary);
+    }
+    .forecast-icon { font-size: 26px; }
+    .forecast-high { font-size: 16px; font-weight: 700; }
+    .forecast-low { font-size: 13px; color: var(--text-tertiary); }
+    .forecast-rain { font-size: 10px; color: #60a5fa; font-weight: 600; }
+
+    /* ── State messages ── */
+    .state-msg {
+      text-align: center; padding: 80px 32px;
+      color: var(--text-tertiary); font-size: 15px; line-height: 1.6;
+    }
+
+    .updated {
+      margin-top: 32px; font-size: 12px;
+      color: var(--text-tertiary); text-align: right;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .main { padding: 28px 20px 60px; }
+      .nav-inner { padding: 0 20px; }
+      .hero-card { flex-direction: column; align-items: flex-start; padding: 28px; }
+      .hero-temp { font-size: 68px; }
+      .hero-icon { font-size: 64px; }
+      .hero-right { align-items: flex-start; }
+      .hero-meta { text-align: left; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .forecast { grid-template-columns: repeat(4, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-back" href="/">← amanvg</a>
+      <span class="nav-title">Tempest Station</span>
+      <div style="width:80px"></div>
+    </div>
+  </nav>
+
+  <main class="main" id="app">
+    <div class="state-msg">Loading station data…</div>
+  </main>
+
+  <script>
+    // Personal use token — visible client-side by design
+    const TOKEN      = '4ce85bb1-b95b-4fa8-aaf8-c92b53e34c1a';
+    const STATION_ID = 168029;
+    const DEVICE_ID  = 400121;
+    const BASE       = 'https://swd.weatherflow.com/swd/rest';
+
+    // ── Unit converters (metric → imperial) ──────────────────────────────────
+    const c2f    = c  => +(c * 9/5 + 32).toFixed(1);
+    const ms2mph = ms => +(ms * 2.23694).toFixed(1);
+    const mb2inhg = mb => +(mb * 0.0295301).toFixed(2);
+    const mm2in  = mm => +(mm * 0.0393701).toFixed(3);
+
+    function deg2card(deg) {
+      const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+      return dirs[Math.round((deg || 0) / 22.5) % 16];
+    }
+
+    function iconToEmoji(icon) {
+      const m = {
+        'clear-day':'☀️','clear-night':'🌙',
+        'cloudy':'☁️','foggy':'🌫️',
+        'partly-cloudy-day':'⛅','partly-cloudy-night':'🌙',
+        'possibly-rainy-day':'🌦️','possibly-rainy-night':'🌦️',
+        'possibly-sleet-day':'🌨️','possibly-sleet-night':'🌨️',
+        'possibly-snow-day':'🌨️','possibly-snow-night':'🌨️',
+        'possibly-thunderstorm-day':'⛈️','possibly-thunderstorm-night':'⛈️',
+        'rainy':'🌧️','sleet':'🌨️','snow':'❄️',
+        'thunderstorm':'⛈️','windy':'💨',
+      };
+      return m[icon] || '🌡️';
+    }
+
+    function trendArrow(trend) {
+      return trend === 'rising' ? ' ↑' : trend === 'falling' ? ' ↓' : '';
+    }
+
+    // ── obs_st device array indices ───────────────────────────────────────────
+    const F = {
+      TS: 0, WIND_LULL: 1, WIND_AVG: 2, WIND_GUST: 3, WIND_DIR: 4,
+      PRESSURE: 6, TEMP: 7, HUMIDITY: 8, UV: 10, SOLAR: 11,
+      RAIN: 12, LIGHTNING_DIST: 14, LIGHTNING_COUNT: 15, BATTERY: 16
+    };
+
+    // ── Stat card HTML ────────────────────────────────────────────────────────
+    function statCard(label, value, unit = '', sub = '') {
+      return `
+        <div class="stat-card">
+          <div class="stat-label">${label}</div>
+          <div class="stat-value">${value}${unit ? `<span class="stat-unit"> ${unit}</span>` : ''}</div>
+          ${sub ? `<div class="stat-sub">${sub}</div>` : ''}
+        </div>`;
+    }
+
+    // ── SVG line chart ────────────────────────────────────────────────────────
+    function lineChart({ data, color, yUnit = '', height = 170, yDecimals = 0, forceYMin }) {
+      if (!data || data.length < 2) {
+        return '<div class="chart-empty">No data available</div>';
+      }
+
+      // Downsample to ≤300 points for smooth rendering
+      const step = Math.max(1, Math.floor(data.length / 300));
+      const pts  = data.filter((_, i) => i % step === 0);
+
+      const W = 740, H = height;
+      const pad = { top: 10, right: 12, bottom: 28, left: 48 };
+      const cw  = W - pad.left - pad.right;
+      const ch  = H - pad.top - pad.bottom;
+
+      const xs    = pts.map(d => d.t);
+      const ys    = pts.map(d => d.v);
+      const xMin  = xs[0], xMax = xs[xs.length - 1];
+      const rawYMin = Math.min(...ys), rawYMax = Math.max(...ys);
+      const yPad  = (rawYMax - rawYMin) * 0.07 || 0.5;
+      const yMin  = forceYMin !== undefined ? forceYMin : rawYMin - yPad;
+      const yMax  = rawYMax + yPad;
+      const yRange = yMax - yMin || 1;
+
+      const sx = t => pad.left + ((t - xMin) / (xMax - xMin)) * cw;
+      const sy = v => pad.top  + ch - ((v - yMin) / yRange) * ch;
+
+      const coords   = pts.map(d => `${sx(d.t).toFixed(1)},${sy(d.v).toFixed(1)}`);
+      const linePath = `M ${coords.join(' L ')}`;
+      const areaPath = `M ${sx(xMin).toFixed(1)},${(pad.top + ch).toFixed(1)} L ${coords.join(' L ')} L ${sx(xMax).toFixed(1)},${(pad.top + ch).toFixed(1)} Z`;
+
+      // 5 Y-axis ticks
+      const yTicks = [0,1,2,3,4].map(i => {
+        const v = yMin + yRange * i / 4;
+        const lbl = yDecimals > 0 ? v.toFixed(yDecimals) + yUnit : Math.round(v) + yUnit;
+        return { y: sy(v).toFixed(1), lbl };
+      });
+
+      // X-axis ticks every 4 hours
+      const step4h     = 4 * 3600;
+      const firstTick  = Math.ceil(xMin / step4h) * step4h;
+      const xTicks     = [];
+      for (let t = firstTick; t <= xMax; t += step4h) {
+        const d = new Date(t * 1000);
+        xTicks.push({
+          x: sx(t).toFixed(1),
+          lbl: d.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
+        });
+      }
+
+      const gid = 'g' + Math.random().toString(36).slice(2, 8);
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" aria-hidden="true">
+          <defs>
+            <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="${color}" stop-opacity="0.28"/>
+              <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
+            </linearGradient>
+          </defs>
+          ${yTicks.map(t => `
+            <line x1="${pad.left}" y1="${t.y}" x2="${pad.left + cw}" y2="${t.y}"
+                  stroke="#262626" stroke-width="1"/>
+            <text x="${pad.left - 6}" y="${+t.y + 4}"
+                  text-anchor="end" fill="#505050"
+                  font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="500">${t.lbl}</text>
+          `).join('')}
+          <path d="${areaPath}" fill="url(#${gid})"/>
+          <path d="${linePath}" fill="none" stroke="${color}"
+                stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+          ${xTicks.map(t => `
+            <text x="${t.x}" y="${pad.top + ch + 18}"
+                  text-anchor="middle" fill="#505050"
+                  font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="500">${t.lbl}</text>
+          `).join('')}
+        </svg>`;
+    }
+
+    // ── Wind direction rose (small inline SVG) ────────────────────────────────
+    function windRose(deg) {
+      const r = 18, cx = 20, cy = 20;
+      const rad = (deg - 90) * Math.PI / 180;
+      const tx  = cx + r * Math.cos(rad);
+      const ty  = cy + r * Math.sin(rad);
+      return `
+        <svg width="40" height="40" viewBox="0 0 40 40" style="vertical-align:middle;margin-left:4px" aria-hidden="true">
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#2e2e2e" stroke-width="1"/>
+          <circle cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="4" fill="#a78bfa"/>
+          <line x1="${cx}" y1="${cy}" x2="${tx.toFixed(1)}" y2="${ty.toFixed(1)}"
+                stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>`;
+    }
+
+    // ── Main load ─────────────────────────────────────────────────────────────
+    async function loadAll() {
+      const app = document.getElementById('app');
+      try {
+        // Parallel fetch: current station obs + today device obs + yesterday device obs + forecast
+        const [obsRes, todayRes, yestRes, fcRes] = await Promise.all([
+          fetch(`${BASE}/observations/station/${STATION_ID}?token=${TOKEN}`),
+          fetch(`${BASE}/observations/device/${DEVICE_ID}?token=${TOKEN}&day_offset=0`),
+          fetch(`${BASE}/observations/device/${DEVICE_ID}?token=${TOKEN}&day_offset=1`),
+          fetch(`${BASE}/better_forecast?station_id=${STATION_ID}&token=${TOKEN}&units_temp=f&units_wind=mph&units_precip=in&units_pressure=inhg&units_distance=mi&units_direction=cardinal`),
+        ]);
+
+        if (!obsRes.ok || !fcRes.ok) throw new Error(`API error (${obsRes.status}/${fcRes.status})`);
+
+        const [obsData, todayData, yestData, fcData] = await Promise.all([
+          obsRes.json(), todayRes.json(), yestRes.json(), fcRes.json()
+        ]);
+
+        // ── Current conditions (all already in imperial) ──────────────────────
+        const cur = obsData.obs?.[0];
+        if (!cur) throw new Error('No observations returned');
+        const cc = fcData.current_conditions;
+        if (!cc) throw new Error('No current_conditions in forecast');
+
+        const stationName  = obsData.station_name || 'Tempest Station';
+        const pressureStr  = cur.sea_level_pressure?.toFixed(2) + trendArrow(cur.pressure_trend);
+        const windDir      = cur.wind_direction ?? 0;
+        const windCard     = deg2card(windDir);
+        const lightning3h  = cur.lightning_strike_count_last_3hr ?? 0;
+        const lightningDist = cur.lightning_strike_last_distance; // in mi (station_units.units_distance = mi)
+        const rainYest     = (cur.precip_accum_local_yesterday ?? 0).toFixed(2);
+
+        // ── Historical data — combine yesterday + today, filter to last 24 h ──
+        const nowEpoch = Date.now() / 1000;
+        const cutoff   = nowEpoch - 24 * 3600;
+
+        const rawObs = [
+          ...(yestData.obs || []),
+          ...(todayData.obs || []),
+        ].filter(o => Array.isArray(o) && o[F.TS] >= cutoff && o[F.TS] <= nowEpoch)
+         .sort((a, b) => a[F.TS] - b[F.TS]);
+
+        // Chart datasets
+        const tempData  = rawObs.map(o => ({ t: o[F.TS], v: c2f(o[F.TEMP]) }));
+        const humidData = rawObs.map(o => ({ t: o[F.TS], v: o[F.HUMIDITY] }));
+        const windData  = rawObs.map(o => ({ t: o[F.TS], v: ms2mph(o[F.WIND_AVG]) }));
+        const gustData  = rawObs.map(o => ({ t: o[F.TS], v: ms2mph(o[F.WIND_GUST]) }));
+        const pressData = rawObs.map(o => ({ t: o[F.TS], v: mb2inhg(o[F.PRESSURE]) }));
+        const uvData    = rawObs.map(o => ({ t: o[F.TS], v: o[F.UV] ?? 0 }));
+        const solarData = rawObs.map(o => ({ t: o[F.TS], v: o[F.SOLAR] ?? 0 }));
+
+        // Rain accumulated today (from local midnight)
+        const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
+        const midnightEpoch = todayMidnight.getTime() / 1000;
+        let rainSum = 0;
+        const rainAccData = rawObs
+          .filter(o => o[F.TS] >= midnightEpoch)
+          .map(o => { rainSum += mm2in(o[F.RAIN]); return { t: o[F.TS], v: rainSum }; });
+        const totalRainToday = rainAccData.length > 0 ? rainAccData[rainAccData.length - 1].v : 0;
+
+        // ── Forecast ──────────────────────────────────────────────────────────
+        const daily    = fcData.forecast?.daily?.slice(0, 7) || [];
+        const dayNames = daily.map((d, i) => {
+          if (i === 0) return 'Today';
+          if (i === 1) return 'Tom';
+          return new Date(d.day_start_local * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+        });
+
+        // ── Battery indicator ─────────────────────────────────────────────────
+        const battV    = cur.battery?.toFixed(2);
+        const battPct  = battV ? Math.min(100, Math.max(0, Math.round((battV - 2.35) / (2.80 - 2.35) * 100))) : null;
+
+        const updatedAt = new Date(cur.timestamp * 1000).toLocaleTimeString('en-US', {
+          hour: 'numeric', minute: '2-digit', hour12: true
+        });
+
+        // ── Render ────────────────────────────────────────────────────────────
+        app.innerHTML = `
+          <div class="hero-card">
+            <div class="hero-left">
+              <div class="hero-station">${stationName}</div>
+              <div class="hero-temp">${Math.round(cc.air_temperature)}°</div>
+              <div class="hero-desc">${cc.conditions} · Feels like ${Math.round(cc.feels_like)}°</div>
+            </div>
+            <div class="hero-right">
+              <div class="hero-icon">${iconToEmoji(cc.icon)}</div>
+              <div class="hero-meta">
+                ${cc.precip_probability > 0 ? `💧 ${cc.precip_probability}% chance of rain<br>` : ''}
+                Hi ${Math.round(daily[0]?.air_temp_high ?? cc.air_temperature)}° · Lo ${Math.round(daily[0]?.air_temp_low ?? cc.air_temperature)}°
+              </div>
+            </div>
+          </div>
+
+          <div class="stats">
+            ${statCard('Humidity',    cur.relative_humidity,                      '%',    `Dew point ${Math.round(cur.dew_point)}°F`)}
+            ${statCard('Wind',        `${cur.wind_avg} <span class="stat-unit"style="font-size:18px">${windCard}</span>`, 'mph', `Gust ${cur.wind_gust} mph · Lull ${cur.wind_lull} mph`)}
+            ${statCard('Pressure',    pressureStr,                                 'inHg', cur.pressure_trend)}
+            ${statCard('UV Index',    (cur.uv ?? 0).toFixed(1),                   '',     uvLevel(cur.uv))}
+            ${statCard('Solar',       Math.round(cur.solar_radiation ?? 0),       'W/m²', '')}
+            ${statCard('Rain Today',  (cur.precip_accum_local_day ?? 0).toFixed(2), 'in', `Yesterday: ${rainYest} in`)}
+            ${lightning3h > 0
+              ? statCard('Lightning', lightning3h,  `strike${lightning3h !== 1 ? 's' : ''} (3h)`,
+                  lightningDist != null ? `Last: ${lightningDist} mi away` : '')
+              : statCard('Lightning', 'None',       '',  'No strikes nearby')}
+            ${battV != null ? statCard('Battery', battV, 'V', battPct != null ? `${battPct}% charge` : '') : ''}
+          </div>
+
+          <div class="section-label">Last 24 Hours</div>
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Temperature</div>
+                <div class="chart-current">${Math.round(cc.air_temperature)}<span class="chart-current-unit">°F</span></div>
+              </div>
+              ${lineChart({ data: tempData, color: '#f97316', yUnit: '°' })}
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Humidity</div>
+                <div class="chart-current">${cur.relative_humidity}<span class="chart-current-unit">%</span></div>
+              </div>
+              ${lineChart({ data: humidData, color: '#38bdf8', yUnit: '%', forceYMin: 0 })}
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Wind Speed</div>
+                <div class="chart-current">${cur.wind_avg}<span class="chart-current-unit"> mph</span></div>
+              </div>
+              ${lineChart({ data: windData, color: '#a78bfa', yUnit: ' mph', forceYMin: 0 })}
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Wind Gust</div>
+                <div class="chart-current">${cur.wind_gust}<span class="chart-current-unit"> mph</span></div>
+              </div>
+              ${lineChart({ data: gustData, color: '#c084fc', yUnit: ' mph', forceYMin: 0 })}
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Pressure</div>
+                <div class="chart-current">${cur.sea_level_pressure?.toFixed(2)}<span class="chart-current-unit"> inHg</span></div>
+              </div>
+              ${lineChart({ data: pressData, color: '#34d399', yUnit: '"', yDecimals: 2 })}
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">UV Index</div>
+                <div class="chart-current">${(cur.uv ?? 0).toFixed(1)}</div>
+              </div>
+              ${lineChart({ data: uvData, color: '#fbbf24', yUnit: '', forceYMin: 0 })}
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Solar Radiation</div>
+                <div class="chart-current">${Math.round(cur.solar_radiation ?? 0)}<span class="chart-current-unit"> W/m²</span></div>
+              </div>
+              ${lineChart({ data: solarData, color: '#fb923c', yUnit: '', forceYMin: 0 })}
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Rain Today</div>
+                <div class="chart-current">${totalRainToday.toFixed(2)}<span class="chart-current-unit"> in</span></div>
+              </div>
+              ${rainAccData.length > 2 && totalRainToday > 0
+                ? lineChart({ data: rainAccData, color: '#60a5fa', yUnit: '"', yDecimals: 2, forceYMin: 0 })
+                : '<div class="chart-empty">No rain today ☀️</div>'}
+            </div>
+          </div>
+
+          <div class="section-label">7-Day Forecast</div>
+          <div class="forecast">
+            ${daily.map((d, i) => `
+              <div class="forecast-day">
+                <div class="forecast-name">${dayNames[i]}</div>
+                <div class="forecast-icon">${iconToEmoji(d.icon)}</div>
+                <div class="forecast-high">${Math.round(d.air_temp_high)}°</div>
+                <div class="forecast-low">${Math.round(d.air_temp_low)}°</div>
+                ${d.precip_probability > 0 ? `<div class="forecast-rain">💧 ${d.precip_probability}%</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="updated">Updated ${updatedAt} · WeatherFlow Tempest</div>
+        `;
+
+      } catch (err) {
+        console.error(err);
+        app.innerHTML = `
+          <div class="state-msg">
+            Couldn't load station data.<br>
+            <small style="color:#3a3a3a">${err.message}</small>
+          </div>`;
+      }
+    }
+
+    function uvLevel(uv) {
+      if (uv == null) return '';
+      if (uv < 3)  return 'Low';
+      if (uv < 6)  return 'Moderate';
+      if (uv < 8)  return 'High';
+      if (uv < 11) return 'Very High';
+      return 'Extreme';
+    }
+
+    loadAll();
+    setInterval(loadAll, 5 * 60 * 1000); // refresh every 5 min
+  </script>
+
+</body>
+</html>
