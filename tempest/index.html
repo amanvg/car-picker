@@ -53,6 +53,33 @@
     .nav-back:hover { color: var(--text-primary); background: var(--border); }
     .nav-title { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }
 
+    /* ── Nav dropdown ── */
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-btn {
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      color: var(--text-secondary); background: none; border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .nav-dropdown-btn:hover { color: var(--text-primary); background: var(--border); }
+    .nav-dropdown-menu {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 6px; min-width: 220px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      opacity: 0; transform: translateY(-4px);
+      pointer-events: none; transition: opacity 0.15s, transform 0.15s;
+    }
+    .nav-dropdown.open .nav-dropdown-menu {
+      opacity: 1; transform: translateY(0); pointer-events: auto;
+    }
+    .nav-dropdown-item {
+      display: block; padding: 8px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      text-decoration: none; transition: color 0.15s, background 0.15s;
+    }
+    .nav-dropdown-item:hover { color: var(--text-primary); background: var(--border); }
+
     .main { max-width: 980px; margin: 0 auto; padding: 40px 32px 80px; }
 
     /* ── Hero ── */
@@ -155,6 +182,74 @@
     .forecast-low { font-size: 13px; color: var(--text-tertiary); }
     .forecast-rain { font-size: 10px; color: #60a5fa; font-weight: 600; }
 
+    /* ── Annual chart ── */
+    .annual-section { margin-bottom: 32px; }
+    .annual-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-card); padding: 24px 14px 10px; overflow: hidden;
+    }
+    .annual-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 14px; padding: 0 6px;
+    }
+    .annual-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-tertiary);
+    }
+    .annual-stats {
+      display: flex; gap: 16px; font-size: 13px; font-weight: 600;
+    }
+    .annual-stats .hi { color: #f97316; }
+    .annual-stats .lo { color: #38bdf8; }
+    .annual-stats .avg { color: var(--text-secondary); }
+    .annual-metric-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;
+    }
+    @media (max-width: 700px) {
+      .annual-metric-row { grid-template-columns: 1fr; }
+    }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.70);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px;
+      opacity: 0; transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      padding: 32px 24px 20px;
+      max-width: 1100px; width: 100%;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      transform: scale(0.96); transition: transform 0.2s ease;
+    }
+    .modal-overlay.active .modal-content { transform: scale(1); }
+    .modal-close {
+      position: absolute; top: 12px; right: 16px;
+      background: none; border: none; color: var(--text-tertiary);
+      font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .modal-close:hover { color: var(--text-primary); background: var(--border); }
+    .modal-content { position: relative; }
+
+    /* Make expandable cards show pointer */
+    .chart-card, .annual-card, .stat-card, .forecast-day { cursor: pointer; transition: border-color 0.15s; }
+    .chart-card:hover, .annual-card:hover, .stat-card:hover { border-color: var(--border-hover); }
+
+    @media (max-width: 700px) {
+      .modal-overlay { padding: 20px; }
+    }
+
     /* ── State messages ── */
     .state-msg {
       text-align: center; padding: 80px 32px;
@@ -187,7 +282,13 @@
     <div class="nav-inner">
       <a class="nav-back" href="/">← amanvg</a>
       <span class="nav-title">Tempest Station</span>
-      <div style="width:80px"></div>
+      <div class="nav-dropdown">
+        <button class="nav-dropdown-btn" id="yearMenuBtn">History ▾</button>
+        <div class="nav-dropdown-menu" id="yearMenu">
+          <a href="#year/2026" class="nav-dropdown-item">2026</a>
+          <a href="#year/2025" class="nav-dropdown-item">2025</a>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -340,6 +441,270 @@
           <line x1="${cx}" y1="${cy}" x2="${tx.toFixed(1)}" y2="${ty.toFixed(1)}"
                 stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
         </svg>`;
+    }
+
+    // ── Annual band chart (high / low range + avg line) ───────────────────────
+    function annualBandChart({ data, colorHi, colorLo, colorAvg, yUnit = '', height = 220, yDecimals = 0, forceYMin, forceYMax, yStep }) {
+      if (!data || data.length < 2) return '<div class="chart-empty">No data available</div>';
+
+      const W = 920, H = height;
+      const pad = { top: 14, right: 16, bottom: 36, left: 52 };
+      const cw = W - pad.left - pad.right;
+      const ch = H - pad.top - pad.bottom;
+
+      const allVals = data.flatMap(d => [d.hi, d.lo]);
+      const rawYMin = Math.min(...allVals), rawYMax = Math.max(...allVals);
+      const yPad = (rawYMax - rawYMin) * 0.08 || 1;
+      const yMin = forceYMin !== undefined ? forceYMin : rawYMin - yPad;
+      const yMax = forceYMax !== undefined ? forceYMax : rawYMax + yPad;
+      const yRange = yMax - yMin || 1;
+
+      // X is index-based (evenly spaced days)
+      const sx = i => pad.left + (i / (data.length - 1)) * cw;
+      const sy = v => pad.top + ch - ((v - yMin) / yRange) * ch;
+
+      // Band path (high line forward, low line backward)
+      const hiPts = data.map((d, i) => `${sx(i).toFixed(1)},${sy(d.hi).toFixed(1)}`);
+      const loPts = data.map((d, i) => `${sx(i).toFixed(1)},${sy(d.lo).toFixed(1)}`).reverse();
+      const bandPath = `M ${hiPts.join(' L ')} L ${loPts.join(' L ')} Z`;
+
+      // Avg line
+      const avgPts = data.map((d, i) => `${sx(i).toFixed(1)},${sy(d.avg).toFixed(1)}`);
+      const avgPath = `M ${avgPts.join(' L ')}`;
+
+      // Y ticks
+      const yTicks = [];
+      if (yStep) {
+        for (let v = yMin; v <= yMax; v += yStep) {
+          const lbl = yDecimals > 0 ? v.toFixed(yDecimals) + yUnit : Math.round(v) + yUnit;
+          yTicks.push({ y: sy(v).toFixed(1), lbl });
+        }
+      } else {
+        for (let i = 0; i <= 4; i++) {
+          const v = yMin + yRange * i / 4;
+          const lbl = yDecimals > 0 ? v.toFixed(yDecimals) + yUnit : Math.round(v) + yUnit;
+          yTicks.push({ y: sy(v).toFixed(1), lbl });
+        }
+      }
+
+      // X ticks — month labels
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const xTicks = [];
+      for (let m = 0; m < 12; m++) {
+        const yr = data[0].date.slice(0, 4);
+        const target = `${yr}-${String(m+1).padStart(2,'0')}-01`;
+        const idx = data.findIndex(d => d.date >= target);
+        if (idx >= 0) xTicks.push({ x: sx(idx).toFixed(1), lbl: months[m] });
+      }
+
+      const gid = 'ab' + Math.random().toString(36).slice(2, 8);
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" aria-hidden="true">
+          <defs>
+            <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${colorHi}" stop-opacity="0.30"/>
+              <stop offset="100%" stop-color="${colorLo}" stop-opacity="0.10"/>
+            </linearGradient>
+          </defs>
+          ${yTicks.map(t => `
+            <line x1="${pad.left}" y1="${t.y}" x2="${pad.left + cw}" y2="${t.y}"
+                  stroke="#262626" stroke-width="1"/>
+            <text x="${pad.left - 6}" y="${+t.y + 4}"
+                  text-anchor="end" fill="#505050"
+                  font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="500">${t.lbl}</text>
+          `).join('')}
+          <path d="${bandPath}" fill="url(#${gid})"/>
+          <path d="${avgPath}" fill="none" stroke="${colorAvg}"
+                stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.7"/>
+          ${xTicks.map(t => `
+            <text x="${t.x}" y="${pad.top + ch + 20}"
+                  text-anchor="middle" fill="#505050"
+                  font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="500">${t.lbl}</text>
+          `).join('')}
+        </svg>`;
+    }
+
+    // Simple annual line chart (single value per day)
+    function annualLineChart({ data, color, yUnit = '', height = 170, yDecimals = 0, forceYMin }) {
+      if (!data || data.length < 2) return '<div class="chart-empty">No data available</div>';
+
+      const W = 920, H = height;
+      const pad = { top: 14, right: 16, bottom: 36, left: 52 };
+      const cw = W - pad.left - pad.right;
+      const ch = H - pad.top - pad.bottom;
+
+      const ys = data.map(d => d.v);
+      const rawYMin = Math.min(...ys), rawYMax = Math.max(...ys);
+      const yPad = (rawYMax - rawYMin) * 0.07 || 0.5;
+      const yMin = forceYMin !== undefined ? forceYMin : rawYMin - yPad;
+      const yMax = rawYMax + yPad;
+      const yRange = yMax - yMin || 1;
+
+      const sx = i => pad.left + (i / (data.length - 1)) * cw;
+      const sy = v => pad.top + ch - ((v - yMin) / yRange) * ch;
+
+      const coords = data.map((d, i) => `${sx(i).toFixed(1)},${sy(d.v).toFixed(1)}`);
+      const linePath = `M ${coords.join(' L ')}`;
+      const areaPath = `M ${sx(0).toFixed(1)},${(pad.top + ch).toFixed(1)} L ${coords.join(' L ')} L ${sx(data.length-1).toFixed(1)},${(pad.top + ch).toFixed(1)} Z`;
+
+      const yTicks = [0,1,2,3,4].map(i => {
+        const v = yMin + yRange * i / 4;
+        const lbl = yDecimals > 0 ? v.toFixed(yDecimals) + yUnit : Math.round(v) + yUnit;
+        return { y: sy(v).toFixed(1), lbl };
+      });
+
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const xTicks = [];
+      for (let m = 0; m < 12; m++) {
+        const yr = data[0].date.slice(0, 4);
+        const target = `${yr}-${String(m+1).padStart(2,'0')}-01`;
+        const idx = data.findIndex(d => d.date >= target);
+        if (idx >= 0) xTicks.push({ x: sx(idx).toFixed(1), lbl: months[m] });
+      }
+
+      const gid = 'al' + Math.random().toString(36).slice(2, 8);
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" aria-hidden="true">
+          <defs>
+            <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${color}" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
+            </linearGradient>
+          </defs>
+          ${yTicks.map(t => `
+            <line x1="${pad.left}" y1="${t.y}" x2="${pad.left + cw}" y2="${t.y}"
+                  stroke="#262626" stroke-width="1"/>
+            <text x="${pad.left - 6}" y="${+t.y + 4}"
+                  text-anchor="end" fill="#505050"
+                  font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="500">${t.lbl}</text>
+          `).join('')}
+          <path d="${areaPath}" fill="url(#${gid})"/>
+          <path d="${linePath}" fill="none" stroke="${color}"
+                stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+          ${xTicks.map(t => `
+            <text x="${t.x}" y="${pad.top + ch + 20}"
+                  text-anchor="middle" fill="#505050"
+                  font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="500">${t.lbl}</text>
+          `).join('')}
+        </svg>`;
+    }
+
+    // ── Annual data indices (daily bucket obs_st) ───────────────────────────
+    const DF = {
+      DATE: 0, PRES_AVG: 1, PRES_MAX: 2, PRES_MIN: 3,
+      TEMP_AVG: 4, TEMP_MAX: 5, TEMP_MIN: 6,
+      HUM_AVG: 7, HUM_MAX: 8, HUM_MIN: 9,
+      SOLAR_SUM: 10, SOLAR_MAX: 17, UV_MAX: 12,
+      WIND_AVG: 13, WIND_GUST: 14, WIND_LULL: 15,
+      WIND_DIR: 16, RAIN: 29
+    };
+
+    async function loadAnnual(year) {
+      const start = Date.UTC(year, 0, 1) / 1000;
+      const end   = Date.UTC(year + 1, 0, 1) / 1000;
+      const res = await fetch(
+        `${BASE}/observations/device/${DEVICE_ID}?token=${TOKEN}&time_start=${start}&time_end=${end}`
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data.obs || []).filter(o => o[DF.DATE] && o[DF.DATE].startsWith(String(year)));
+    }
+
+    function renderAnnualSection(obs, year) {
+      if (!obs || obs.length < 7) return '<div class="state-msg">Not enough data for this year yet.</div>';
+      const heading = String(year);
+
+      // Build datasets (clamp min temp to avg if it's an obvious bad read, e.g. power loss)
+      const tempData = obs.map(o => {
+        const hi = c2f(o[DF.TEMP_MAX]), lo = c2f(o[DF.TEMP_MIN]), avg = c2f(o[DF.TEMP_AVG]);
+        return { date: o[DF.DATE], hi, lo: (avg - lo > 40) ? avg : lo, avg };
+      });
+      const humData = obs.map(o => ({
+        date: o[DF.DATE], hi: o[DF.HUM_MAX], lo: o[DF.HUM_MIN], avg: o[DF.HUM_AVG]
+      }));
+      const windData = obs.map(o => ({ date: o[DF.DATE], v: ms2mph(o[DF.WIND_AVG]) }));
+      const gustData = obs.map(o => ({ date: o[DF.DATE], v: ms2mph(o[DF.WIND_GUST]) }));
+      const pressData = obs.map(o => ({ date: o[DF.DATE], v: mb2inhg(o[DF.PRES_AVG]) }));
+      const solarData = obs.map(o => {
+        const v = o[DF.SOLAR_MAX] ?? 0;
+        return { date: o[DF.DATE], v: v > 1500 ? 0 : v };
+      });
+
+      // Rain accumulation over year
+      let rainSum = 0;
+      const rainAccData = obs.map(o => {
+        rainSum += mm2in(o[DF.RAIN] ?? 0);
+        return { date: o[DF.DATE], v: +rainSum.toFixed(2) };
+      });
+
+      // Summary stats
+      const allHighs = tempData.map(d => d.hi);
+      const allLows  = tempData.map(d => d.lo);
+      const yearHigh = Math.round(Math.max(...allHighs));
+      const yearLow  = Math.round(Math.min(...allLows));
+      const yearAvg  = Math.round(tempData.reduce((s, d) => s + d.avg, 0) / tempData.length);
+      const totalRain = rainAccData[rainAccData.length - 1].v;
+
+      return `
+        <div class="section-label">${heading}</div>
+        <div class="annual-section">
+          <div class="annual-card">
+            <div class="annual-header">
+              <div class="annual-title">Temperature — Daily High / Low</div>
+              <div class="annual-stats">
+                <span class="hi">High ${yearHigh}°F</span>
+                <span class="lo">Low ${yearLow}°F</span>
+                <span class="avg">Avg ${yearAvg}°F</span>
+              </div>
+            </div>
+            ${annualBandChart({ data: tempData, colorHi: '#f97316', colorLo: '#38bdf8', colorAvg: '#a0a0a0', yUnit: '°', forceYMin: 0, forceYMax: 100, yStep: 10 })}
+          </div>
+          <div class="annual-metric-row">
+            <div class="annual-card">
+              <div class="annual-header">
+                <div class="annual-title">Humidity — Daily Range</div>
+              </div>
+              ${annualBandChart({ data: humData, colorHi: '#38bdf8', colorLo: '#6366f1', colorAvg: '#7dd3fc', yUnit: '%', height: 180, forceYMin: 0 })}
+            </div>
+            <div class="annual-card">
+              <div class="annual-header">
+                <div class="annual-title">Rainfall — Cumulative</div>
+                <div class="annual-stats"><span class="avg">${totalRain.toFixed(1)} in total</span></div>
+              </div>
+              ${annualLineChart({ data: rainAccData, color: '#60a5fa', yUnit: '"', yDecimals: 1, forceYMin: 0, height: 180 })}
+            </div>
+          </div>
+          <div class="annual-metric-row">
+            <div class="annual-card">
+              <div class="annual-header">
+                <div class="annual-title">Wind Speed — Daily Avg</div>
+              </div>
+              ${annualLineChart({ data: windData, color: '#a78bfa', yUnit: ' mph', forceYMin: 0, height: 180 })}
+            </div>
+            <div class="annual-card">
+              <div class="annual-header">
+                <div class="annual-title">Wind Gust — Daily Max</div>
+              </div>
+              ${annualLineChart({ data: gustData, color: '#c084fc', yUnit: ' mph', forceYMin: 0, height: 180 })}
+            </div>
+          </div>
+          <div class="annual-metric-row">
+            <div class="annual-card">
+              <div class="annual-header">
+                <div class="annual-title">Pressure — Daily Avg</div>
+              </div>
+              ${annualLineChart({ data: pressData, color: '#34d399', yUnit: '"', yDecimals: 2, height: 180 })}
+            </div>
+            <div class="annual-card">
+              <div class="annual-header">
+                <div class="annual-title">Solar Radiation — Daily Peak</div>
+              </div>
+              ${annualLineChart({ data: solarData, color: '#fb923c', yUnit: ' W/m²', forceYMin: 0, height: 180 })}
+            </div>
+          </div>
+        </div>`;
     }
 
     // ── Main load ─────────────────────────────────────────────────────────────
@@ -546,8 +911,76 @@
       return 'Extreme';
     }
 
-    loadAll();
-    setInterval(loadAll, 5 * 60 * 1000); // refresh every 5 min
+    // ── Modal system ──────────────────────────────────────────────────────────
+    function initModal() {
+      if (document.getElementById('chart-modal')) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'chart-modal';
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML = '<div class="modal-content"><button class="modal-close">&times;</button><div class="modal-body"></div></div>';
+      document.body.appendChild(overlay);
+
+      const body = overlay.querySelector('.modal-body');
+      const closeBtn = overlay.querySelector('.modal-close');
+
+      function close() { overlay.classList.remove('active'); }
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      closeBtn.addEventListener('click', close);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+      document.getElementById('app').addEventListener('click', (e) => {
+        const card = e.target.closest('.chart-card, .annual-card, .stat-card');
+        if (!card) return;
+        body.innerHTML = card.innerHTML;
+        overlay.classList.add('active');
+      });
+    }
+
+    // ── Dropdown menu ───────────────────────────────────────────────────────
+    const menuBtn = document.getElementById('yearMenuBtn');
+    const dropdown = menuBtn.parentElement;
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', () => dropdown.classList.remove('open'));
+
+    // ── Year view renderer ──────────────────────────────────────────────────
+    async function loadYearView(year) {
+      const app = document.getElementById('app');
+      app.innerHTML = '<div class="state-msg">Loading year data…</div>';
+      try {
+        const obs = await loadAnnual(year);
+        app.innerHTML = `
+          <a class="nav-back" href="#" style="display:inline-block;margin-bottom:20px">← Back to Dashboard</a>
+          ${renderAnnualSection(obs, year)}
+        `;
+      } catch (err) {
+        app.innerHTML = `<div class="state-msg">Couldn't load year data.<br><small style="color:#3a3a3a">${err.message}</small></div>`;
+      }
+    }
+
+    // ── Router ──────────────────────────────────────────────────────────────
+    let refreshInterval = null;
+
+    function route() {
+      dropdown.classList.remove('open');
+      const hash = location.hash;
+      const yearMatch = hash.match(/^#year\/(\d{4})$/);
+
+      if (yearMatch) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+        loadYearView(parseInt(yearMatch[1])).then(initModal);
+      } else {
+        loadAll().then(initModal);
+        clearInterval(refreshInterval);
+        refreshInterval = setInterval(loadAll, 5 * 60 * 1000);
+      }
+    }
+
+    window.addEventListener('hashchange', route);
+    route();
   </script>
 
 </body>
