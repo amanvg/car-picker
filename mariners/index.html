@@ -190,7 +190,7 @@
         }
 
         .standings-column {
-            flex: 0 0 220px;
+            flex: 0 0 260px;
             min-width: 0;
         }
 
@@ -1369,6 +1369,29 @@
                         if (dName.includes('west')) alWest = sorted;
                         allALEntries.push(...sorted);
                     }
+
+                    // Fallback: API now returns flat standings without division children
+                    if (!allALEntries.length && league.standings?.entries?.length) {
+                        const AL_WEST    = new Set(['SEA','LAA','HOU','TEX','ATH','OAK']);
+                        const AL_CENTRAL = new Set(['DET','CLE','MIN','KC','CHW','CWS']);
+                        const AL_EAST    = new Set(['NYY','TOR','BOS','BAL','TB']);
+                        const byDiv = { west: [], central: [], east: [] };
+                        for (const entry of league.standings.entries) {
+                            const abbr = entry.team?.abbreviation || '';
+                            if (AL_WEST.has(abbr))    byDiv.west.push(entry);
+                            else if (AL_CENTRAL.has(abbr)) byDiv.central.push(entry);
+                            else if (AL_EAST.has(abbr))    byDiv.east.push(entry);
+                        }
+                        const sortByWin = arr => [...arr].sort((a, b) =>
+                            (parseFloat(getStat(b, 'winPercent')) || 0) - (parseFloat(getStat(a, 'winPercent')) || 0));
+                        alWest = sortByWin(byDiv.west);
+                        for (const div of ['west', 'central', 'east']) {
+                            const sorted = sortByWin(byDiv[div]);
+                            if (sorted.length) divisionLeaderIds.add(sorted[0].team?.id);
+                            allALEntries.push(...sorted);
+                        }
+                    }
+
                     break;
                 }
 
